@@ -52,3 +52,34 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to create product" }, { status: 500 })
   }
 }
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Product ID is required" }, { status: 400 })
+    }
+    const body = await request.json()
+    const product = await ProductService.updateProduct(id, body)
+    return NextResponse.json({ success: true, data: product })
+  } catch (error) {
+    console.error("Error updating product:", error)
+    return NextResponse.json({ success: false, error: "Failed to update product" }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Product ID is required" }, { status: 400 })
+    }
+    await ProductService.deleteProduct(id)
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting product:", error)
+    return NextResponse.json({ success: false, error: "Failed to delete product" }, { status: 500 })
+  }
+}

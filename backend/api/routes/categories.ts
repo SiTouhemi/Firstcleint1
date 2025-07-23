@@ -20,8 +20,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const category = await CategoryService.createCategory(body)
     return NextResponse.json({ success: true, data: category })
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error creating category:", error)
-    return NextResponse.json({ success: false, error: "Failed to create category" }, { status: 500 })
+    // Return the actual error message if available
+    return NextResponse.json({ success: false, error: error?.message || error?.toString() || "Failed to create category" }, { status: 500 })
   }
 }

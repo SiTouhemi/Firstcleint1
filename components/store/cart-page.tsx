@@ -91,10 +91,33 @@ export function CartPage({ onBack }: CartPageProps) {
           setCustomerInfo({ name: "", phone: "", address: "" })
           setTimeout(() => onBack(), 2000)
         } else {
-          throw new Error(result.message || "فشل في إرسال الطلب")
+          // Show user-friendly error from backend
+          toast({
+            title: "خطأ",
+            description: result.error || "فشل في إرسال الطلب",
+            variant: "destructive",
+          })
+          if (result.details) {
+            console.error("Order error details:", result.details)
+          }
         }
       } else {
-        throw new Error("فشل في إرسال الطلب")
+        // Try to parse backend error message
+        let errorMsg = "فشل في إرسال الطلب"
+        let details = null
+        try {
+          const result = await response.json()
+          errorMsg = result.error || errorMsg
+          details = result.details
+        } catch {}
+        toast({
+          title: "خطأ",
+          description: errorMsg,
+          variant: "destructive",
+        })
+        if (details) {
+          console.error("Order error details:", details)
+        }
       }
     } catch (error) {
       console.error("Error creating order:", error)

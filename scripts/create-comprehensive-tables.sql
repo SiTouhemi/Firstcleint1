@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS orders (
   location_lat DECIMAL(10,8),
   location_lng DECIMAL(11,8),
   location_name VARCHAR(255),
+  items JSONB, -- Added to match backend logic
   subtotal DECIMAL(10,2) NOT NULL,
   promo_code_id UUID REFERENCES promo_codes(id),
   promo_code VARCHAR(50),
@@ -330,6 +331,10 @@ BEGIN
     ALTER TABLE stores ADD CONSTRAINT stores_city_id_fkey FOREIGN KEY (city_id) REFERENCES cities(id);
   END IF;
 END $$;
+
+ALTER TABLE products 
+ADD CONSTRAINT products_store_id_fkey 
+FOREIGN KEY (store_id) REFERENCES stores(id);
 
 -- === SEED DATA ===
 

@@ -147,15 +147,31 @@ export class ProductService {
   }
 
   static async createProduct(productData: Omit<Product, "id" | "created_at" | "updated_at">): Promise<Product> {
+    // Validate store_id
+    if (!productData.store_id) throw new Error("store_id is required")
+    const { data: store, error: storeError } = await supabase.from("stores").select("id").eq("id", productData.store_id).single()
+    if (storeError || !store) throw new Error("Invalid store_id")
+    // Validate category_id
+    if (!productData.category_id) throw new Error("category_id is required")
+    const { data: category, error: categoryError } = await supabase.from("categories").select("id").eq("id", productData.category_id).single()
+    if (categoryError || !category) throw new Error("Invalid category_id")
     const { data, error } = await supabase.from("products").insert(productData).select().single()
-
     if (error) throw error
     return data
   }
 
   static async updateProduct(id: string, productData: Partial<Product>): Promise<Product> {
+    // Validate store_id if present
+    if (productData.store_id) {
+      const { data: store, error: storeError } = await supabase.from("stores").select("id").eq("id", productData.store_id).single()
+      if (storeError || !store) throw new Error("Invalid store_id")
+    }
+    // Validate category_id if present
+    if (productData.category_id) {
+      const { data: category, error: categoryError } = await supabase.from("categories").select("id").eq("id", productData.category_id).single()
+      if (categoryError || !category) throw new Error("Invalid category_id")
+    }
     const { data, error } = await supabase.from("products").update(productData).eq("id", id).select().single()
-
     if (error) throw error
     return data
   }

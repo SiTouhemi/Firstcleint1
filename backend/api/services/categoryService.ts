@@ -76,11 +76,22 @@ export class CategoryService {
     return data
   }
 
-  static async createCategory(categoryData: Omit<Category, "id" | "created_at" | "updated_at">): Promise<Category> {
-    const { data, error } = await supabase.from("categories").insert(categoryData).select().single()
+  static async createCategory(categoryData: any): Promise<Category> {
+    // Map icon to image_url, and only include DB fields
+    const dbCategory = {
+      name: categoryData.name,
+      slug: categoryData.slug,
+      description: categoryData.description,
+      image_url: categoryData.icon || null, // Use icon as image_url for now
+      sort_order: categoryData.sort_order ?? 0,
+      is_active: true, // Always active on creation
+      // created_at, updated_at are auto
+    };
 
-    if (error) throw error
-    return data
+    const { data, error } = await supabase.from("categories").insert(dbCategory).select().single();
+
+    if (error) throw error;
+    return data;
   }
 
   static async updateCategory(id: string, categoryData: Partial<Category>): Promise<Category> {

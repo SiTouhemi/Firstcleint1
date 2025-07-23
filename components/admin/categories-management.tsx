@@ -67,6 +67,16 @@ export function CategoriesManagement() {
     }
   }
 
+  function generateSlug(name: string) {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/[^\w\u0600-\u06FF-]+/g, '') // Remove non-word chars except Arabic and hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with one
+      .replace(/^-+|-+$/g, ''); // Trim hyphens from start/end
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -80,8 +90,10 @@ export function CategoriesManagement() {
     }
 
     try {
+      const slug = generateSlug(formData.name)
       const categoryData = {
         ...formData,
+        slug, // Add slug to payload
         parent_id: formData.parent_id || null,
         description: formData.description || null,
         icon: formData.icon || null,
@@ -236,7 +248,7 @@ export function CategoriesManagement() {
               إضافة فئة جديدة
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
             <DialogHeader>
               <DialogTitle className="text-xl">{editingCategory ? "تعديل الفئة" : "إضافة فئة جديدة"}</DialogTitle>
             </DialogHeader>
@@ -265,6 +277,8 @@ export function CategoriesManagement() {
                 />
               </div>
 
+              {/* --- CATEGORY MANAGEMENT FORM --- */}
+              {/* Updated: clarified main/subcategory logic, icon handling (emoji or URL), and added comments for clarity. */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">الفئة الرئيسية</label>
                 <select
@@ -272,13 +286,16 @@ export function CategoriesManagement() {
                   value={formData.parent_id}
                   onChange={(e) => setFormData((prev) => ({ ...prev, parent_id: e.target.value }))}
                 >
-                  <option value="">فئة رئيسية</option>
+                  <option value="">فئة رئيسية (بدون أب)</option>
                   {mainCategories.map((category) => (
                     <option key={category.id} value={category.id}>
                       {category.name}
                     </option>
                   ))}
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  اختر فئة رئيسية إذا كنت تريد إنشاء فئة فرعية. اتركها فارغة لإنشاء فئة رئيسية.
+                </p>
               </div>
 
               <div>
@@ -300,9 +317,12 @@ export function CategoriesManagement() {
                 <Input
                   value={formData.icon}
                   onChange={(e) => setFormData((prev) => ({ ...prev, icon: e.target.value }))}
-                  placeholder="أو أدخل أيقونة مخصصة"
+                  placeholder="أو أدخل رمز/رابط أيقونة مخصص (مثال: https://...)"
                   className="mt-2"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  يمكنك اختيار رمز من الأعلى أو إدخال رمز/رابط أيقونة مخصص (يفضل رمز إيموجي أو رابط صورة صغير).
+                </p>
               </div>
 
               <div>

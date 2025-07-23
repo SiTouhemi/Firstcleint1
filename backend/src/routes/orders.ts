@@ -18,7 +18,8 @@ router.post("/", async (req, res) => {
     ) {
       return res.status(400).json({
         success: false,
-        error: "Missing required fields",
+        error: "يرجى ملء جميع الحقول المطلوبة وإضافة منتجات للسلة.",
+        details: "Missing required fields: customer_name, customer_phone, customer_address, items"
       })
     }
 
@@ -46,7 +47,8 @@ router.post("/", async (req, res) => {
       console.error("Database error creating order:", orderError)
       return res.status(500).json({
         success: false,
-        error: "Failed to create order",
+        error: "حدث خطأ أثناء إنشاء الطلب. يرجى المحاولة مرة أخرى.",
+        details: orderError.message || orderError
       })
     }
 
@@ -58,7 +60,8 @@ router.post("/", async (req, res) => {
     console.error("Error creating order:", error)
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "حدث خطأ غير متوقع أثناء معالجة الطلب.",
+      details: error instanceof Error ? error.message : String(error)
     })
   }
 })
@@ -83,7 +86,8 @@ router.get("/", async (req, res) => {
       console.error("Database error:", error)
       return res.status(500).json({
         success: false,
-        error: "Failed to fetch orders",
+        error: "حدث خطأ أثناء جلب الطلبات.",
+        details: error.message || error
       })
     }
 
@@ -95,7 +99,8 @@ router.get("/", async (req, res) => {
     console.error("Error fetching orders:", error)
     res.status(500).json({
       success: false,
-      error: "Internal server error",
+      error: "حدث خطأ غير متوقع أثناء جلب الطلبات.",
+      details: error instanceof Error ? error.message : String(error)
     })
   }
 })

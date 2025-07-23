@@ -15,7 +15,7 @@ export default function AdminLoginPage() {
         credentials: "include", // if using cookies
       });
       if (res.ok) {
-        router.push("/admin/dashboard");
+        router.push("/admin");
         return true;
       } else {
         return false;

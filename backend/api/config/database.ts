@@ -111,7 +111,6 @@ export interface Order {
   items: any[]
   subtotal: number
   delivery_fee: number
-  discount_amount: number
   tax_amount: number
   total: number
   promo_code?: string

@@ -17,7 +17,6 @@ router.get("/", async (req, res) => {
         subcategory:categories!products_subcategory_id_fkey(name),
         store:stores!inner(id, name, slug, city_id, location_lat, location_lng, delivery_range)
       `)
-      .eq("available", true)
       .eq("is_active", true)
 
     // Apply category filter
@@ -171,16 +170,13 @@ router.post("/", async (req, res) => {
           name: body.name,
           description: body.description || "",
           price: body.price,
-          compare_price: body.compare_price,
-          discount: body.discount || 0,
           image_url: body.image_url,
           category_id: body.category_id,
           store_id: body.store_id,
           is_active: body.is_active !== false,
-          available: body.available !== false,
-          stock_quantity: body.stock_quantity || 0,
           unit: body.unit || "قطعة",
-          is_featured: body.is_featured || false,
+          subcategory_id: body.subcategory_id || null,
+          slug: body.slug || (body.name ? body.name.toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g, '-').replace(/^-+|-+$/g, '') : undefined),
         },
       ])
       .select()
@@ -201,5 +197,59 @@ router.post("/", async (req, res) => {
     res.status(500).json({ success: false, error: "Internal server error" })
   }
 })
+
+// PUT /api/products/:id
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const body = req.body;
+    // Only allow updating fields that exist in the schema
+    const updateFields = {
+      name: body.name,
+      description: body.description,
+      price: body.price,
+      image_url: body.image_url,
+      category_id: body.category_id,
+      store_id: body.store_id,
+      is_active: body.is_active,
+      unit: body.unit,
+      subcategory_id: body.subcategory_id,
+      slug: body.slug || (body.name ? body.name.toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g, '-').replace(/^-+|-+$/g, '') : undefined),
+    };
+    const { data: product, error } = await supabase
+      .from("products")
+      .update(updateFields)
+      .eq("id", id)
+      .select()
+      .single();
+    if (error) {
+      console.error("Database error (update product):", error);
+      return res.status(500).json({ success: false, error: "Failed to update product", details: error.message });
+    }
+    res.json({ success: true, data: product });
+  } catch (error) {
+    console.error("API error (update product):", error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// DELETE /api/products/:id
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { error } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      console.error("Database error (delete product):", error);
+      return res.status(500).json({ success: false, error: "Failed to delete product", details: error.message });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    console.error("API error (delete product):", error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
 
 export default router

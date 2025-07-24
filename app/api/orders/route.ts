@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
         items,
         subtotal,
         delivery_fee,
-        discount_amount,
         tax_amount,
         total,
         payment_method,

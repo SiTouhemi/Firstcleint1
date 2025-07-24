@@ -21,13 +21,14 @@ export function ProductsManagement() {
   const { toast } = useToast()
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
     price: 0,
-    unit: "",
-    image_url: "",
     store_id: "",
     category_id: "",
     subcategory_id: "",
+    unit: "",
+    description: "",
+    image_url: "",
+    is_active: true,
   })
 
   useEffect(() => {
@@ -97,13 +98,14 @@ export function ProductsManagement() {
     setEditingProduct(product)
     setFormData({
       name: product.name,
-      description: product.description || "",
       price: product.price,
-      unit: product.unit || "",
-      image_url: product.image_url || "",
       store_id: product.store_id || "",
       category_id: product.category_id || "",
       subcategory_id: product.subcategory_id || "",
+      unit: product.unit || "",
+      description: product.description || "",
+      image_url: product.image_url || "",
+      is_active: product.is_active !== undefined ? product.is_active : true,
     })
     setShowDialog(true)
   }
@@ -112,20 +114,20 @@ export function ProductsManagement() {
     setEditingProduct(null)
     setFormData({
       name: "",
-      description: "",
       price: 0,
-      unit: "",
-      image_url: "",
       store_id: "",
       category_id: "",
       subcategory_id: "",
+      unit: "",
+      description: "",
+      image_url: "",
+      is_active: true,
     })
     setShowDialog(true)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
     if (!formData.store_id || !formData.category_id) {
       toast({
         title: "بيانات ناقصة",
@@ -134,30 +136,30 @@ export function ProductsManagement() {
       })
       return
     }
-
     try {
       const url = editingProduct ? `/api/products/${editingProduct.id}` : "/api/products"
       const method = editingProduct ? "PUT" : "POST"
-      
+      const payload = {
+        name: formData.name,
+        price: formData.price,
+        store_id: formData.store_id,
+        category_id: formData.category_id,
+        subcategory_id: formData.subcategory_id || null,
+        unit: formData.unit,
+        description: formData.description,
+        image_url: formData.image_url,
+        is_active: formData.is_active,
+      }
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          description: formData.description,
-          price: formData.price,
-          unit: formData.unit,
-          image_url: formData.image_url,
-          store_id: formData.store_id,
-          category_id: formData.category_id,
-          subcategory_id: formData.subcategory_id || null,
-        }),
+        body: JSON.stringify(payload),
       })
       const data = await response.json()
       if (data.success) {
-        toast({ 
-          title: editingProduct ? "تم التحديث" : "تم الإنشاء", 
-          description: editingProduct ? "تم تحديث المنتج بنجاح" : "تم إنشاء المنتج بنجاح" 
+        toast({
+          title: editingProduct ? "تم التحديث" : "تم الإنشاء",
+          description: editingProduct ? "تم تحديث المنتج بنجاح" : "تم إنشاء المنتج بنجاح"
         })
         setShowDialog(false)
         setEditingProduct(null)
@@ -329,6 +331,16 @@ export function ProductsManagement() {
               <Input value={formData.image_url} onChange={e => setFormData(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..." />
             </div>
             
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">نشط</label>
+              <input
+                type="checkbox"
+                checked={formData.is_active}
+                onChange={e => setFormData(f => ({ ...f, is_active: e.target.checked }))}
+                className="h-5 w-5"
+              />
+            </div>
+
             <div className="flex gap-3 pt-4">
               <Button type="button" variant="outline" onClick={() => setShowDialog(false)} className="flex-1">إلغاء</Button>
               <Button type="submit" className="flex-1">{editingProduct ? "تحديث المنتج" : "إنشاء المنتج"}</Button>

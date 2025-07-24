@@ -152,8 +152,6 @@ router.post("/", async (req, res) => {
                 name: body.name,
                 description: body.description || "",
                 price: body.price,
-                compare_price: body.compare_price,
-                discount: body.discount || 0,
                 image_url: body.image_url,
                 category_id: body.category_id,
                 store_id: body.store_id,

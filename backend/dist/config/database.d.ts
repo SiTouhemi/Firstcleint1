@@ -6,7 +6,6 @@ export interface Product {
     description?: string;
     price: number;
     compare_price?: number;
-    discount?: number;
     image_url?: string;
     is_active: boolean;
     available: boolean;

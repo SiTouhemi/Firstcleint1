@@ -21,15 +21,7 @@ class ProductStore {
             { id: 5, name: 'حذاء كاجوال', price: 249, category: 'shoes', description: 'حذاء مريح للاستخدام اليومي' },
             { id: 6, name: 'هودي رياضي', price: 199, category: 'clothes', description: 'هودي دافئ ومريح' }
         ];
-        
-        this.discountCode = null;
-        this.discountAmount = 0;
-        this.validDiscountCodes = {
-            'SAVE10': { type: 'percentage', value: 10, description: 'خصم 10%' },
-            'SAVE20': { type: 'percentage', value: 20, description: 'خصم 20%' },
-            'FIRST50': { type: 'fixed', value: 50, description: 'خصم 50 ريال' },
-            'WELCOME': { type: 'percentage', value: 15, description: 'خصم ترحيبي 15%' }
-        };
+
         
         this.init();
     }

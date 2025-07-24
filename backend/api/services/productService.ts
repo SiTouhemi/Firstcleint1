@@ -17,12 +17,7 @@ export class ProductService {
   }): Promise<Product[]> {
     let query = supabase
       .from("products")
-      .select(`
-        *,
-        stores!inner(id, name, slug, city, location_lat, location_lng, delivery_range),
-        category:categories!products_category_id_fkey(name, slug),
-        subcategory:categories!products_subcategory_id_fkey(name, slug)
-      `)
+      .select("id, store_id, category_id, subcategory_id, price, is_active, description, image_url, unit, name, slug")
       .eq("is_active", true)
 
     if (filters.storeId) {
@@ -41,38 +36,6 @@ export class ProductService {
       query = query.or(`name.ilike.%${filters.search}%,description.ilike.%${filters.search}%`)
     }
 
-    if (filters.featured) {
-      query = query.eq("is_featured", true)
-    }
-
-    // City filtering using city_id
-    let cityStoreIds: string[] | undefined = undefined
-    if (filters.city) {
-      // Look up city id by name
-      const { data: city, error: cityError } = await supabase
-        .from('cities')
-        .select('id')
-        .eq('name', filters.city)
-        .single()
-      if (cityError) throw cityError
-      if (city && city.id) {
-        // Find all stores in that city
-        const { data: storesInCity, error: storesError } = await supabase
-          .from('stores')
-          .select('id')
-          .eq('city_id', city.id)
-        if (storesError) throw storesError
-        cityStoreIds = (storesInCity || []).map((s: any) => s.id)
-        if (cityStoreIds.length === 0) {
-          return []
-        }
-        query = query.in('store_id', cityStoreIds)
-      } else {
-        // No such city, return empty
-        return []
-      }
-    }
-
     if (filters.limit) {
       query = query.limit(filters.limit)
     }
@@ -81,32 +44,12 @@ export class ProductService {
       query = query.range(filters.offset, filters.offset + (filters.limit || 10) - 1)
     }
 
-    // Remove all logic related to sortBy
-    // Always sort by name ascending
     query = query.order("name", { ascending: true })
-
-    // Database-side nearby filtering
-    let nearbyStoreIds: string[] | undefined = undefined
-    if (filters.nearbyOnly && filters.latitude && filters.longitude) {
-      // Find stores within their delivery range of the user
-      const { data: stores, error: storesError } = await supabase.rpc('find_nearby_stores', {
-        user_lat: filters.latitude,
-        user_lng: filters.longitude
-      })
-      if (storesError) throw storesError
-      nearbyStoreIds = (stores || []).map((s: any) => s.id)
-      if (nearbyStoreIds.length === 0) {
-        return []
-      }
-      query = query.in('store_id', nearbyStoreIds)
-    }
 
     // Fetch data
     const { data, error } = await query
     if (error) throw error
     let products = data || []
-
-    // Remove in-memory haversine filtering
 
     return products
   }
@@ -155,7 +98,13 @@ export class ProductService {
     if (!productData.category_id) throw new Error("category_id is required")
     const { data: category, error: categoryError } = await supabase.from("categories").select("id").eq("id", productData.category_id).single()
     if (categoryError || !category) throw new Error("Invalid category_id")
-    const { data, error } = await supabase.from("products").insert(productData).select().single()
+    // Remove discount field if present and generate slug if missing
+    const { discount, slug, is_active, ...rest } = productData as any;
+    const generatedSlug = slug || (productData.name ? productData.name.toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]+/g, '-').replace(/^-+|-+$/g, '') : undefined);
+    if (!generatedSlug) throw new Error("slug is required and could not be generated from name");
+    const sanitizedProductData = { ...rest, slug: generatedSlug, is_active: is_active !== undefined ? is_active : true };
+    console.log('Inserting product:', sanitizedProductData);
+    const { data, error } = await supabase.from("products").insert(sanitizedProductData).select().single()
     if (error) throw error
     return data
   }

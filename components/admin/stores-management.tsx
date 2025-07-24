@@ -11,7 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { GoogleMapPicker } from "./google-map-picker"
+import dynamic from 'next/dynamic';
+
+const LeafletMapPicker = dynamic(() => import('./leaflet-map-picker'), { ssr: false });
 
 interface Store {
   id: string
@@ -437,11 +439,22 @@ export function StoresManagement() {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">خط العرض (Latitude)</label>
+                    <Input value={formData.location_lat} readOnly className="h-12" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">خط الطول (Longitude)</label>
+                    <Input value={formData.location_lng} readOnly className="h-12" />
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     موقع المتجر <span className="text-red-500">*</span>
                   </label>
-                  <GoogleMapPicker
+                  <LeafletMapPicker
                     onLocationSelect={handleLocationSelect}
                     initialLocation={
                       formData.location_lat && formData.location_lng

@@ -17,14 +17,14 @@ export class CategoryService {
     if (includeSubcategories && categories) {
       // Fetch subcategories for each category
       for (const category of categories) {
-        const { data: subcategories } = await supabase
+        const { data: subcategories, error: subErr } = await supabase
           .from("categories")
           .select("*")
           .eq("parent_id", category.id)
           .eq("is_active", true)
           .order("sort_order", { ascending: true })
           .order("name", { ascending: true })
-
+        if (subErr) throw subErr
         category.subcategories = subcategories || []
       }
     }

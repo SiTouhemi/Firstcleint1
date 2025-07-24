@@ -1,0 +1,13 @@
+{
+  "name": "Test Store",
+  "description": "A test store for verification",
+  "email": "test@store.com",
+  "phone": "0501234567",
+  "address": "123 Test Street, Test City",
+  "location_lat": 21.4858,
+  "location_lng": 39.1925,
+  "delivery_range": 10,
+  "delivery_fee": 5,
+  "min_order_amount": 50,
+  "theme_color": "#FF5722"
+}

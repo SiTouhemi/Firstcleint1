@@ -8,6 +8,11 @@ import { OrdersManagement } from "@/components/admin/orders-management"
 import { Store, Package, Tags, ShoppingCart, BarChart3, Settings, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("dashboard")
   const [sidebarOpen, setSidebarOpen] = useState(false)

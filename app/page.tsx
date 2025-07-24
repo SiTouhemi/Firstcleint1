@@ -13,6 +13,7 @@ import { useCart } from "@/hooks/use-cart"
 import { useLocation } from "@/hooks/use-location"
 import { ArrowRight } from "@/components/icons/arrow-right" // Import ArrowRight component
 import type { Product, Category } from "@/types"
+import SubcategoryFilterBar from "@/components/store/SubcategoryFilterBar"
 
 export default function HomePage() {
   const [currentPage, setCurrentPage] = useState<"home" | "cart" | "orders" | "profile">("home")
@@ -20,6 +21,7 @@ export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>("")
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string>("")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCity, setSelectedCity] = useState<string>("")
   const [nearbyOnly, setNearbyOnly] = useState(false)
@@ -49,6 +51,17 @@ export default function HomePage() {
     fetchCategories()
   }, [])
 
+  // Set first category as selected by default when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0].id)
+    }
+  }, [categories, selectedCategory])
+  // Reset subcategory when category changes
+  useEffect(() => {
+    setSelectedSubcategory("")
+  }, [selectedCategory])
+
   // Fetch products with filters
   useEffect(() => {
     const fetchProducts = async () => {
@@ -58,6 +71,7 @@ export default function HomePage() {
         const params = new URLSearchParams()
 
         if (selectedCategory) params.append("category", selectedCategory)
+        if (selectedSubcategory) params.append("subcategory", selectedSubcategory)
         if (searchQuery) params.append("search", searchQuery)
         if (selectedCity) params.append("city", selectedCity)
         // Remove sortBy from HomeFilters props and usage
@@ -86,7 +100,7 @@ export default function HomePage() {
     }
 
     fetchProducts()
-  }, [selectedCategory, searchQuery, selectedCity, nearbyOnly, location])
+  }, [selectedCategory, selectedSubcategory, searchQuery, selectedCity, nearbyOnly, location])
 
   // Request location when nearby filter is enabled
   useEffect(() => {
@@ -95,8 +109,12 @@ export default function HomePage() {
     }
   }, [nearbyOnly, location, requestLocation])
 
-  const handleCategorySelect = (categoryName: string) => {
-    setSelectedCategory(categoryName === selectedCategory ? "" : categoryName)
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId)
+  }
+
+  const handleSubcategorySelect = (subcategoryId: string) => {
+    setSelectedSubcategory(subcategoryId)
   }
 
   const handleSearch = (query: string) => {
@@ -160,16 +178,31 @@ export default function HomePage() {
 
         <div className="px-4 py-6 space-y-6">
           <MainCategories
-            categories={categories}
+            categories={categories.filter(c => !c.parent_id)}
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategorySelect}
           />
-
+          {/* Subcategories below categories */}
+          {selectedCategory && (() => {
+            // Try to find subcategories from the nested structure first
+            let cat = categories.find(c => c.id === selectedCategory)
+            let subcategories = cat && Array.isArray(cat.subcategories) && cat.subcategories.length > 0
+              ? cat.subcategories
+              : categories.filter(c => c.parent_id === selectedCategory)
+            if (subcategories && subcategories.length > 0) {
+              return (
+                <SubcategoryFilterBar
+                  subcategories={subcategories}
+                  selectedId={selectedSubcategory}
+                  onSelect={handleSubcategorySelect}
+                />
+              )
+            }
+            return null
+          })()}
           <HomeFilters
             nearbyOnly={nearbyOnly}
-            // Remove sortBy from HomeFilters props and usage
             onNearbyToggle={handleNearbyToggle}
-            // Remove onSortChange
             hasLocation={!!location}
           />
 

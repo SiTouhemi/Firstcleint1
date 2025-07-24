@@ -351,10 +351,42 @@ export function CategoriesManagement() {
 
       {/* Categories Tree */}
       <div className="space-y-4">
-        {mainCategories.map((category) => {
+        {mainCategories.map((category, idx) => {
+          const gradients = [
+            'linear-gradient(135deg, rgb(227, 242, 253) 0%, rgb(187, 222, 251) 100%)', // blue
+            'linear-gradient(135deg, #e8f5e9 0%, #a5d6a7 100%)', // green
+            'linear-gradient(135deg, #fff3e0 0%, #ffcc80 100%)', // orange
+            'linear-gradient(135deg, #f3e5f5 0%, #ce93d8 100%)', // purple
+            'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)', // pink
+            'linear-gradient(135deg, #e1f5fe 0%, #81d4fa 100%)', // light blue
+          ];
+          const background = gradients[idx % gradients.length];
           const subcategories = getSubcategories(category.id)
           return (
-            <Card key={category.id} className="hover:shadow-lg transition-all duration-300">
+            <Card key={category.id} className="hover:shadow-lg transition-all duration-300"
+              style={{
+                width: '20vh',
+                height: '20vh',
+                borderColor: 'rgb(33, 150, 243)',
+                background,
+                opacity: 0.8,
+                fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif',
+                color: '#1a1a1a',
+                textAlign: 'center',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderRadius: '1rem',
+                padding: '1.25rem',
+                cursor: 'pointer',
+                position: 'relative',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+              }}
+            >
               <CardHeader className="pb-4">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
@@ -386,6 +418,26 @@ export function CategoriesManagement() {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    {/* Add Subcategory Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="ml-2"
+                      onClick={() => {
+                        setEditingCategory(null);
+                        setFormData({
+                          name: "",
+                          description: "",
+                          icon: "",
+                          parent_id: category.id,
+                          sort_order: categories.length,
+                        });
+                        setShowDialog(true);
+                      }}
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      إضافة فئة فرعية
+                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -398,37 +450,61 @@ export function CategoriesManagement() {
                       الفئات الفرعية
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {subcategories.map((subcategory) => (
-                        <div
-                          key={subcategory.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">
-                              {subcategory.icon || <Folder className="h-4 w-4 text-gray-400" />}
-                            </span>
-                            <span className="text-sm font-medium text-gray-900">{subcategory.name}</span>
+                      {subcategories.map((subcategory, subIdx) => {
+                        const subBackground = gradients[subIdx % gradients.length];
+                        return (
+                          <div
+                            key={subcategory.id}
+                            style={{
+                              width: '20vh',
+                              height: '20vh',
+                              borderColor: 'rgb(33, 150, 243)',
+                              background: subBackground,
+                              opacity: 0.8,
+                              fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif',
+                              color: '#1a1a1a',
+                              textAlign: 'center',
+                              borderWidth: '1px',
+                              borderStyle: 'solid',
+                              borderRadius: '1rem',
+                              padding: '1.25rem',
+                              cursor: 'pointer',
+                              position: 'relative',
+                              overflow: 'hidden',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'transform 0.3s, box-shadow 0.3s',
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">
+                                {subcategory.icon || <Folder className="h-4 w-4 text-gray-400" />}
+                              </span>
+                              <span className="text-sm font-medium text-gray-900">{subcategory.name}</span>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => handleEdit(subcategory)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-red-600 hover:text-red-700"
+                                onClick={() => handleDelete(subcategory.id)}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => handleEdit(subcategory)}
-                            >
-                              <Edit className="h-3 w-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-red-600 hover:text-red-700"
-                              onClick={() => handleDelete(subcategory.id)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </CardContent>

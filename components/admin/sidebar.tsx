@@ -124,10 +124,10 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-row-reverse">
               {!isCollapsed && (
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">لوحة التحكم</h1>
+                <div className="text-right w-full">
+                  <h1 className="text-xl font-bold text-gray-900">لوحة الإدارة</h1>
                   <p className="text-sm text-gray-600 mt-1">إدارة المتاجر الإلكترونية</p>
                 </div>
               )}
@@ -189,6 +189,26 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               </div>
             </div>
           )}
+
+          {/* Add logout button at the very bottom, always visible and responsive */}
+          <div className="p-4 border-t border-gray-200 mt-auto">
+            <Button
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2 text-red-600 hover:text-white hover:bg-red-600 transition-all"
+              onClick={() => {
+                // Clear admin token and redirect to login (customize as needed)
+                if (typeof window !== 'undefined') {
+                  document.cookie = 'admin_token=; Max-Age=0; path=/;';
+                  window.location.href = '/admin/login';
+                }
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6A2.25 2.25 0 005.25 5.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m-6-3h12m0 0l-3-3m3 3l-3 3" />
+              </svg>
+              خروج
+            </Button>
+          </div>
         </div>
       </div>
     </>

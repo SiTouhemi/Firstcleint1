@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { BannerType } from "@/types"
+import type { Banner } from "@/types"
 
 export function BannerComponent() {
-  const [banners, setBanners] = useState<BannerType[]>([])
+  const [banners, setBanners] = useState<Banner[]>([])
   const [currentBanner, setCurrentBanner] = useState(0)
 
   useEffect(() => {
@@ -37,9 +37,14 @@ export function BannerComponent() {
 
   if (banners.length === 0) {
     return (
-      <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 mx-4 mt-4 rounded-xl">
-        <h2 className="text-xl font-bold mb-2">مرحباً بك في متجرنا</h2>
-        <p className="text-blue-100">اكتشف أفضل المنتجات بأسعار مميزة</p>
+      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-5 mx-4 mt-4 flex items-center justify-between gap-4" style={{ fontFamily: 'Noto Sans Arabic, sans-serif' }}>
+        <div>
+          <h2 className="text-2xl font-bold mb-1">عروض خاصة</h2>
+          <p className="text-base text-blue-100">خصم يصل إلى 50% على جميع المنتجات</p>
+        </div>
+        <div className="flex items-center justify-center">
+          <span className="bg-yellow-400 text-blue-900 font-bold text-lg rounded-full w-16 h-16 flex items-center justify-center shadow-md">50%</span>
+        </div>
       </div>
     )
   }
@@ -49,20 +54,21 @@ export function BannerComponent() {
   return (
     <div className="relative mx-4 mt-4">
       <div
-        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl min-h-32 flex flex-col justify-center"
+        className="bg-blue-600 text-white rounded-2xl shadow-lg p-5 flex items-center justify-between gap-4 min-h-[90px]"
         style={{
+          fontFamily: 'Noto Sans Arabic, sans-serif',
           backgroundImage: banner.image_url ? `url(${banner.image_url})` : undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
+          backgroundSize: banner.image_url ? 'cover' : undefined,
+          backgroundPosition: banner.image_url ? 'center' : undefined,
         }}
       >
         <div className="relative z-10">
-          <h2 className="text-xl font-bold mb-2">{banner.title}</h2>
-          {banner.description && <p className="text-blue-100">{banner.description}</p>}
+          <h2 className="text-2xl font-bold mb-1">{banner.title}</h2>
+          {banner.description && <p className="text-base text-blue-100">{banner.description}</p>}
         </div>
-        {banner.image_url && <div className="absolute inset-0 bg-black bg-opacity-30 rounded-xl" />}
+        {/* No badge for dynamic banners since no badge/discount field exists */}
+        {banner.image_url && <div className="absolute inset-0 bg-black bg-opacity-30 rounded-2xl" />}
       </div>
-
       {banners.length > 1 && (
         <div className="flex justify-center mt-2 gap-1">
           {banners.map((_, index) => (

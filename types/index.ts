@@ -24,10 +24,13 @@ export interface Category {
   slug: string
   description?: string
   image_url?: string
+  icon?: string
+  parent_id?: string
   is_active: boolean
   sort_order?: number
   created_at?: string
   updated_at?: string
+  subcategories?: Category[]
 }
 
 export interface Store {

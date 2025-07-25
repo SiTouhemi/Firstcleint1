@@ -14,7 +14,7 @@ interface HomeFiltersProps {
 
 export function HomeFilters({ cities, nearbyOnly, onNearbyToggle, hasLocation, selectedCity, onCityChange }: HomeFiltersProps) {
   return (
-    <div className="flex items-center gap-3 overflow-x-auto pb-2 justify-end">
+    <div className="flex flex-row-reverse items-center gap-3 overflow-x-auto pb-2 justify-end" dir="rtl">
       {/* Location button first (rightmost in RTL) */}
       <Button
         variant={nearbyOnly ? "default" : "outline"}

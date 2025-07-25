@@ -31,6 +31,7 @@ export const useBanners = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let interval: NodeJS.Timeout;
     const fetchBanners = async () => {
       try {
         const res = await fetch('/api/banners')
@@ -43,7 +44,9 @@ export const useBanners = () => {
         setLoading(false)
       }
     }
-    fetchBanners()
+    fetchBanners();
+    interval = setInterval(fetchBanners, 900000);
+    return () => clearInterval(interval);
   }, [])
 
   return { banners, loading }

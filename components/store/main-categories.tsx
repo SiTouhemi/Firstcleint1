@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import type { Category } from "@/types"
 
 interface MainCategoriesProps {
-  categories: Category[]
+  categories: (Category & { productCount?: number })[]
   selectedCategory: string
   onCategorySelect: (categoryId: string) => void
 }
@@ -46,9 +46,9 @@ export function MainCategories({ categories, selectedCategory, onCategorySelect 
   }
 
   return (
-    <div className="main-categories-section" style={{ direction: 'ltr' }}>
+    <div className="main-categories-section" style={{ direction: 'rtl' }}>
       <h3 className="main-categories-title text-xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Noto Sans Arabic, sans-serif', textAlign: 'right' }}>الفئات الرئيسية</h3>
-      <div className="main-categories-grid flex flex-row-reverse gap-3 overflow-x-auto pb-2">
+      <div className="main-categories-grid flex flex-row gap-4 overflow-x-auto pb-2">
         {categories.map((category, idx) => {
           const gradients = [
             'linear-gradient(135deg, rgb(227, 242, 253) 0%, rgb(187, 222, 251) 100%)', // blue
@@ -58,9 +58,9 @@ export function MainCategories({ categories, selectedCategory, onCategorySelect 
             'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)', // pink
             'linear-gradient(135deg, #e1f5fe 0%, #81d4fa 100%)', // light blue
           ];
-          const background = gradients[idx % gradients.length];
+          const background = category.background || gradients[idx % gradients.length];
           return (
-            <button
+            <div
               key={category.id}
               onClick={() => onCategorySelect(category.id)}
               style={{
@@ -87,11 +87,13 @@ export function MainCategories({ categories, selectedCategory, onCategorySelect 
               }}
               className="main-category-card hover:scale-105 hover:shadow-lg min-w-[120px] flex-shrink-0"
             >
-              <span className="main-category-icon text-[28px] mb-2 block">
-                {category.icon || (category.image_url && category.image_url.match(/^\p{Emoji}/u) ? category.image_url : '\ud83d\udce6')}
-              </span>
-              <span className="main-category-name font-bold text-base text-gray-900 mb-1 block" style={{ fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif' }}>{category.name}</span>
-            </button>
+              <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
+              <div className="relative z-10 flex flex-col items-center justify-center">
+                <span className="text-3xl mb-2">{category.icon}</span>
+                <span className="font-bold text-base text-gray-900 mb-1 block" style={{ fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif' }}>{category.name}</span>
+                <span className="text-xs text-gray-600 mt-1">+{category.productCount} منتج</span>
+              </div>
+            </div>
           );
         })}
       </div>

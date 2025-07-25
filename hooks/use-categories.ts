@@ -11,6 +11,8 @@ interface Category {
   count: number
   gradient: string
   borderColor: string
+  subcategories?: Category[]
+  parent_id?: string
 }
 
 export const useCategories = () => {
@@ -18,6 +20,7 @@ export const useCategories = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let interval: NodeJS.Timeout;
     const fetchCategories = async () => {
       try {
         const res = await fetch('/api/categories')
@@ -30,7 +33,9 @@ export const useCategories = () => {
         setLoading(false)
       }
     }
-    fetchCategories()
+    fetchCategories();
+    interval = setInterval(fetchCategories, 900000);
+    return () => clearInterval(interval);
   }, [])
 
   return { categories, loading }

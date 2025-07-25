@@ -194,7 +194,6 @@ export function HomeClient({ banners }: HomeClientProps) {
       </div>
     )
   }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
@@ -205,20 +204,25 @@ export function HomeClient({ banners }: HomeClientProps) {
         onCityChange={handleCityChange}
       />
       <main className="pb-20">
-        <DynamicBanner />
+        <DynamicBanner pcMode={true} />
         <div className="px-4 py-6 space-y-6">
           <MainCategories
-            categories={categories.filter(c => !c.parent_id)}
+            categories={categories.filter(c => !c.parent_id).map(cat => ({
+              ...cat,
+              productCount: products.filter(p => p.category_id === cat.id).length
+            }))}
             selectedCategory={selectedCategory}
             onCategorySelect={handleCategorySelect}
           />
           {/* Subcategories below categories */}
           {selectedCategory && (() => {
-            let cat = categories.find(c => c.id === selectedCategory)
-            let subcategories = cat && Array.isArray(cat.subcategories) && cat.subcategories.length > 0
-              ? cat.subcategories
-              : categories.filter(c => c.parent_id === selectedCategory)
+            console.log('Selected category:', selectedCategory);
+            console.log('All categories:', categories);
+            // Find subcategories where parent_id matches the selected category
+            let subcategories = categories.filter(c => c.parent_id === selectedCategory)
+            console.log('Subcategories:', subcategories);
             if (subcategories && subcategories.length > 0) {
+              console.log('Rendering subcategory bar with:', subcategories);
               return (
                 <SubcategoryFilterBar
                   subcategories={subcategories}
@@ -227,6 +231,7 @@ export function HomeClient({ banners }: HomeClientProps) {
                 />
               )
             }
+            console.log('No subcategories to render');
             return null
           })()}
           <HomeFilters

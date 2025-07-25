@@ -41,7 +41,7 @@ export function ProductGrid({ products, loading }: ProductGridProps) {
 
   return (
     <div className="products-section px-0">
-      <div className="products-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-[480px] sm:max-w-2xl md:max-w-4xl mx-auto">
+      <div className="products-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-[480px] sm:max-w-2xl md:max-w-4xl " style={{ direction: 'rtl' }}>
         {products.map((product) => (
           <div
             key={product.id}

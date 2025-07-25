@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { useApp } from "@/app/providers"
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -22,7 +21,6 @@ export default function LoginPage() {
   const [showForm, setShowForm] = useState(false)
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
-  const { supabase } = useApp()
   const router = useRouter()
 
   const cities = [
@@ -58,14 +56,13 @@ export default function LoginPage() {
     setLoading(true)
     try {
       // Check if user exists
-      const { data: existingUser } = await supabase.from("users").select("*").eq("phone", formData.phone).single()
-
-      if (existingUser) {
-        // User exists, log them in
-        localStorage.setItem("currentUser", JSON.stringify(existingUser))
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/phone/${formData.phone}`)
+      if (response.ok) {
+        const user = await response.json()
+        localStorage.setItem("currentUser", JSON.stringify(user))
         toast({
           title: "تم تسجيل الدخول بنجاح",
-          description: `مرحباً ${existingUser.full_name}`,
+          description: `مرحباً ${user.full_name}`,
         })
         router.push("/")
       } else {
@@ -98,31 +95,33 @@ export default function LoginPage() {
     setLoading(true)
     try {
       // Get city ID
-      const { data: cityData } = await supabase.from("cities").select("id").eq("name", formData.city).single()
+      const cityResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/cities/name/${formData.city}`)
+      if (!cityResponse.ok) throw new Error("City not found")
+      const city = await cityResponse.json()
 
       // Get district ID
-      const { data: districtData } = await supabase
-        .from("districts")
-        .select("id")
-        .eq("name", formData.district)
-        .eq("city_id", cityData?.id)
-        .single()
+      const districtResponse = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/districts/name/${formData.district}?city_id=${city.id}`)
+      if (!districtResponse.ok) throw new Error("District not found")
+      const district = await districtResponse.json()
 
       // Create new user
-      const { data: newUser, error } = await supabase
-        .from("users")
-        .insert({
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
           phone: formData.phone,
           full_name: formData.fullName,
-          city_id: cityData?.id,
-          district_id: districtData?.id,
+          city_id: city.id,
+          district_id: district.id,
           address: formData.address,
-        })
-        .select()
-        .single()
+        }),
+      })
 
-      if (error) throw error
+      if (!response.ok) throw new Error("Failed to create user")
 
+      const newUser = await response.json()
       localStorage.setItem("currentUser", JSON.stringify(newUser))
       toast({
         title: "تم إنشاء الحساب بنجاح",

@@ -86,6 +86,7 @@ CREATE TABLE IF NOT EXISTS categories (
   icon VARCHAR(10),
   gradient VARCHAR(255),
   border_color VARCHAR(255),
+  background VARCHAR(255), -- new column for background color/gradient
   is_active BOOLEAN DEFAULT true,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -216,11 +217,12 @@ CREATE TABLE IF NOT EXISTS banners (
   title VARCHAR(255) NOT NULL,
   subtitle VARCHAR(255),
   description TEXT,
-  image_url TEXT,
   background_color VARCHAR(50),
   text_color VARCHAR(50),
   button_text VARCHAR(100),
   button_link VARCHAR(255),
+  offer_text VARCHAR(255), -- new column for offer/description text
+  badge_text VARCHAR(50),  -- new column for badge (e.g., 50%)
   is_active BOOLEAN DEFAULT true,
   sort_order INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

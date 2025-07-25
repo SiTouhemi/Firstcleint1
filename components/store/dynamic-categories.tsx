@@ -26,7 +26,7 @@ export function DynamicCategories({ onCategorySelect }: DynamicCategoriesProps) 
     <div className="p-5 bg-white border-b border-gray-100">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">الفئات الرئيسية</h2>
 
-      <div className="flex gap-4 overflow-x-auto pb-2">
+      <div className="flex gap-4 overflow-x-auto pb-2" style={{ direction: 'rtl' }}>
         {categories.map((category, idx) => {
           const gradients = [
             'linear-gradient(135deg, rgb(227, 242, 253) 0%, rgb(187, 222, 251) 100%)', // blue
@@ -36,7 +36,7 @@ export function DynamicCategories({ onCategorySelect }: DynamicCategoriesProps) 
             'linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%)', // pink
             'linear-gradient(135deg, #e1f5fe 0%, #81d4fa 100%)', // light blue
           ];
-          const background = gradients[idx % gradients.length];
+          const background = category.background || gradients[idx % gradients.length];
           return (
             <div
               key={category.id}

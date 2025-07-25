@@ -34,6 +34,8 @@ interface Store {
   is_featured: boolean
   created_at: string
   updated_at: string
+  slug: string
+  city_id: string
 }
 
 export function StoresManagement() {
@@ -45,8 +47,13 @@ export function StoresManagement() {
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
 
+  // Add cities state
+  const [cities, setCities] = useState<any[]>([])
+
   const [formData, setFormData] = useState({
     name: "",
+    slug: "",
+    city_id: "",
     description: "",
     email: "",
     phone: "",
@@ -61,9 +68,25 @@ export function StoresManagement() {
     theme_color: "#3B82F6",
   })
 
+  // Fetch cities on mount
   useEffect(() => {
+    fetchCities()
     fetchStores()
   }, [])
+
+  const fetchCities = async () => {
+    try {
+      const response = await fetch("/api/cities")
+      const data = await response.json()
+      if (data.success) {
+        setCities(data.data.filter((c: any) => c.is_active))
+      } else {
+        throw new Error(data.error)
+      }
+    } catch (error) {
+      toast({ title: "خطأ", description: "حدث خطأ أثناء جلب المدن", variant: "destructive" })
+    }
+  }
 
   const fetchStores = async () => {
     try {
@@ -91,10 +114,10 @@ export function StoresManagement() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.name.trim() || !formData.address.trim()) {
+    if (!formData.name.trim() || !formData.address.trim() || !formData.city_id.trim() || !formData.slug.trim()) {
       toast({
         title: "بيانات ناقصة",
-        description: "يرجى ملء الحقول المطلوبة على الأقل",
+        description: "يرجى ملء جميع الحقول المطلوبة (اسم المتجر، المعرف، المدينة، العنوان)",
         variant: "destructive",
       })
       return
@@ -106,12 +129,20 @@ export function StoresManagement() {
       const url = editingStore ? `/api/stores/${editingStore.id}` : "/api/stores"
       const method = editingStore ? "PUT" : "POST"
 
+      // Convert empty strings to null for all fields
+      const cleanedFormData = Object.fromEntries(
+        Object.entries(formData).map(([key, value]) => [
+          key,
+          value === "" ? null : value
+        ])
+      )
+
       const response = await fetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(cleanedFormData),
       })
 
       const data = await response.json()
@@ -144,6 +175,8 @@ export function StoresManagement() {
     setEditingStore(store)
     setFormData({
       name: store.name,
+      slug: store.slug || "",
+      city_id: store.city_id || "",
       description: store.description || "",
       email: store.email || "",
       phone: store.phone || "",
@@ -232,6 +265,8 @@ export function StoresManagement() {
   const resetForm = () => {
     setFormData({
       name: "",
+      slug: "",
+      city_id: "",
       description: "",
       email: "",
       phone: "",
@@ -316,13 +351,40 @@ export function StoresManagement() {
                     </label>
                     <Input
                       value={formData.name}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                      onChange={(e) => {
+                        const name = e.target.value;
+                        setFormData((prev) => ({
+                          ...prev,
+                          name,
+                          slug: name
+                            .toLowerCase()
+                            .replace(/\s+/g, '-')
+                            .replace(/[^a-z0-9\u0600-\u06FF-]+/g, '-') // allow Arabic, replace other non-alphanum with dash
+                            .replace(/-+/g, '-')
+                            .replace(/^-|-$/g, '')
+                        }));
+                      }}
                       placeholder="اسم المتجر"
                       required
                       className="h-12"
                     />
                   </div>
-
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">المدينة <span className="text-red-500">*</span></label>
+                    <select
+                      value={formData.city_id}
+                      onChange={e => setFormData(prev => ({ ...prev, city_id: e.target.value }))}
+                      required
+                      className="h-12 w-full border rounded px-3"
+                    >
+                      <option value="">اختر مدينة</option>
+                      {cities.map(city => (
+                        <option key={city.id} value={city.id}>{city.name}</option>
+                      ))}
+                    </select>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">لون المتجر</label>
                     <Input

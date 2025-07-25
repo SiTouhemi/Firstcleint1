@@ -76,3 +76,5 @@ export const LeafletMapPicker: React.FC<LeafletMapPickerProps> = ({ onLocationSe
   }
   return null;
 };
+
+export default LeafletMapPicker;

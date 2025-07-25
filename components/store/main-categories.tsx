@@ -46,7 +46,7 @@ export function MainCategories({ categories, selectedCategory, onCategorySelect 
   }
 
   return (
-    <div className="main-categories-section" style={{ direction: 'rtl' }}>
+    <div className="main-categories-section" style={{ direction: 'ltr' }}>
       <h3 className="main-categories-title text-xl font-bold text-gray-900 mb-3" style={{ fontFamily: 'Noto Sans Arabic, sans-serif', textAlign: 'right' }}>الفئات الرئيسية</h3>
       <div className="main-categories-grid flex flex-row-reverse gap-3 overflow-x-auto pb-2">
         {categories.map((category, idx) => {

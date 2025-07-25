@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Header } from "@/components/store/header"
-import { BannerComponent } from "@/components/store/banner"
+import { DynamicBanner } from "@/components/store/dynamic-banner"
 import { MainCategories } from "@/components/store/main-categories"
 import { ProductGrid } from "@/components/store/product-grid"
 import { BottomNav } from "@/components/store/bottom-nav"
@@ -31,6 +31,7 @@ export function HomeClient({ banners }: HomeClientProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCity, setSelectedCity] = useState<string>("")
   const [nearbyOnly, setNearbyOnly] = useState(false)
+  const [cities, setCities] = useState<string[]>([])
 
   const { getTotalItems } = useCart()
   const { location, requestLocation } = useLocation()
@@ -52,6 +53,26 @@ export function HomeClient({ banners }: HomeClientProps) {
       }
     }
     fetchCategories()
+  }, [])
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const res = await fetch("/api/cities")
+        const data = await res.json()
+        if (data.success && Array.isArray(data.data)) {
+          // Accept both array of objects or array of strings
+          if (typeof data.data[0] === "string") {
+            setCities(data.data)
+          } else if (typeof data.data[0] === "object" && data.data[0].name) {
+            setCities(data.data.map((c: any) => c.name))
+          }
+        }
+      } catch (e) {
+        setCities([])
+      }
+    }
+    fetchCities()
   }, [])
 
   useEffect(() => {
@@ -184,7 +205,7 @@ export function HomeClient({ banners }: HomeClientProps) {
         onCityChange={handleCityChange}
       />
       <main className="pb-20">
-        <BannerComponent banners={banners} />
+        <DynamicBanner />
         <div className="px-4 py-6 space-y-6">
           <MainCategories
             categories={categories.filter(c => !c.parent_id)}
@@ -209,9 +230,12 @@ export function HomeClient({ banners }: HomeClientProps) {
             return null
           })()}
           <HomeFilters
+            cities={cities}
             nearbyOnly={nearbyOnly}
             onNearbyToggle={handleNearbyToggle}
             hasLocation={!!location}
+            selectedCity={selectedCity}
+            onCityChange={handleCityChange}
           />
           <ProductGrid products={products} loading={loading} />
         </div>

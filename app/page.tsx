@@ -1,4 +1,4 @@
-import { BannerComponent } from "@/components/store/banner"
+import { DynamicBanner } from "@/components/store/dynamic-banner"
 import { HomeClient } from "@/components/store/HomeClient"
 import { MainCategories } from "@/components/store/main-categories"
 import { ProductGrid } from "@/components/store/product-grid"

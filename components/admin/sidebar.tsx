@@ -71,6 +71,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
       description: "إدارة أكواد الخصم والعروض الترويجية",
     },
     {
+      id: "banners",
+      label: "إدارة البانرات",
+      icon: ImageIcon,
+      description: "إدارة بانرات الصفحة الرئيسية",
+    },
+    {
       id: "settings",
       label: "الإعدادات",
       icon: Settings,

@@ -5,13 +5,14 @@ import { StoresManagement } from "@/components/admin/stores-management"
 import { CategoriesManagement } from "@/components/admin/categories-management"
 import { ProductsManagement } from "@/components/admin/products-management"
 import { OrdersManagement } from "@/components/admin/orders-management"
-import { BarChart3, Store, Package, Tags, ShoppingCart, MapPin, Percent, Settings, X, Menu } from "lucide-react"
+import { BarChart3, Store, Package, Tags, ShoppingCart, MapPin, Percent, Settings, X, Menu, ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CitiesManagement } from "@/components/admin/cities-management"
 import { PromoCodesManagement } from "@/components/admin/promo-codes-management"
 import { DashboardOverview } from "@/components/admin/dashboard-overview"
 import { StoreSettings } from "@/components/admin/store-settings"
 import { RealTimeNotifications } from "@/components/admin/real-time-notifications"
+import { BannersManagement } from "@/components/admin/banners-management"
 
 export const viewport = {
   width: 'device-width',
@@ -30,6 +31,7 @@ export default function AdminPage() {
     { id: "orders", label: "طلبات العملاء", icon: ShoppingCart },
     { id: "cities", label: "إدارة المدن", icon: MapPin },
     { id: "promo-codes", label: "أكواد الخصم", icon: Percent },
+    { id: "banners", label: "إدارة البانرات", icon: ImageIcon },
     { id: "settings", label: "الإعدادات", icon: Settings },
   ]
 
@@ -49,6 +51,8 @@ export default function AdminPage() {
         return <CitiesManagement />;
       case "promo-codes":
         return <PromoCodesManagement />;
+      case "banners":
+        return <BannersManagement />;
       case "settings":
         return <StoreSettings />;
       default:

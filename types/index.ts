@@ -21,13 +21,14 @@ export interface Product {
 export interface Category {
   id: string
   name: string
-  slug: string
+  key: string
   description?: string
-  image_url?: string
   icon?: string
-  parent_id?: string
+  gradient?: string
+  border_color?: string
+  background?: string // new optional property for background color/gradient
   is_active: boolean
-  sort_order?: number
+  sort_order: number
   created_at?: string
   updated_at?: string
   subcategories?: Category[]
@@ -52,11 +53,22 @@ export interface Store {
 export interface Banner {
   id: string
   title: string
+  subtitle?: string
   description?: string
-  image_url: string
-  link_url?: string
+  offer_text?: string
+  badge_text?: string
+  background_color?: string
+  text_color?: string
+  button_color?: string
+  button_text?: string
+  button_link?: string
+  image_url?: string
   is_active: boolean
   sort_order?: number
+  start_date?: string
+  end_date?: string
+  store_id?: string
+  position?: string
   created_at?: string
   updated_at?: string
 }

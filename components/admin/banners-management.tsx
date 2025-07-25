@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { useApp } from "@/app/providers"
 import { useToast } from "@/hooks/use-toast"
 
 interface Banner {
@@ -17,11 +16,11 @@ interface Banner {
   title: string
   subtitle?: string
   description?: string
-  image_url?: string
   background_color: string
   text_color: string
   button_text?: string
   button_link?: string
+  button_color?: string
   is_active: boolean
   sort_order: number
   created_at: string
@@ -32,20 +31,26 @@ export function BannersManagement() {
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
-  const { supabase } = useApp()
   const { toast } = useToast()
+  const [stores, setStores] = useState<{id: string, name: string}[]>([])
 
   const [formData, setFormData] = useState({
     title: "",
     subtitle: "",
     description: "",
-    image_url: "",
     background_color: "bg-gradient-to-r from-blue-600 to-blue-800",
-    text_color: "text-white",
+    text_color: "#ffffff",
     button_text: "",
     button_link: "",
+    button_color: "#2563eb",
+    offer_text: "",
+    badge_text: "",
     sort_order: 0,
   })
+
+  const [customBackground, setCustomBackground] = useState("")
+  const [customButtonColor, setCustomButtonColor] = useState("")
+  const [customTextColor, setCustomTextColor] = useState("")
 
   const backgroundOptions = [
     { value: "bg-gradient-to-r from-blue-600 to-blue-800", label: "أزرق متدرج", preview: "from-blue-600 to-blue-800" },
@@ -70,21 +75,50 @@ export function BannersManagement() {
 
   useEffect(() => {
     fetchBanners()
+    // Fetch stores for the select input
+    const fetchStores = async () => {
+      try {
+        const response = await fetch('/api/stores')
+        if (response.ok) {
+          const data = await response.json()
+          setStores(Array.isArray(data.data) ? data.data : [])
+        } else {
+          toast({
+            title: "خطأ",
+            description: "حدث خطأ أثناء جلب المتاجر",
+            variant: "destructive",
+          })
+          setStores([])
+        }
+      } catch (error) {
+        toast({
+          title: "خطأ",
+          description: "تعذر الاتصال بالخادم لجلب المتاجر",
+          variant: "destructive",
+        })
+        setStores([])
+      }
+    }
+    fetchStores()
   }, [])
 
   const fetchBanners = async () => {
     try {
-      const { data, error } = await supabase.from("banners").select("*").order("sort_order", { ascending: true })
-
-      if (error) throw error
-      setBanners(data || [])
+      const response = await fetch('/api/banners')
+      if (response.ok) {
+        const data = await response.json()
+        setBanners(Array.isArray(data.data) ? data.data : [])
+      } else {
+        toast({
+          title: "خطأ",
+          description: "حدث خطأ أثناء جلب البانرات",
+          variant: "destructive",
+        })
+        setBanners([])
+      }
     } catch (error) {
       console.error("Error fetching banners:", error)
-      toast({
-        title: "خطأ",
-        description: "حدث خطأ أثناء جلب البانرات",
-        variant: "destructive",
-      })
+      setBanners([])
     } finally {
       setLoading(false)
     }
@@ -101,28 +135,41 @@ export function BannersManagement() {
       })
       return
     }
-
     try {
       const bannerData = {
         ...formData,
         subtitle: formData.subtitle || null,
         description: formData.description || null,
-        image_url: formData.image_url || null,
         button_text: formData.button_text || null,
         button_link: formData.button_link || null,
+        button_color: formData.button_color || null,
+        offer_text: formData.offer_text || null,
+        badge_text: formData.badge_text || null,
       }
 
       if (editingBanner) {
-        const { error } = await supabase.from("banners").update(bannerData).eq("id", editingBanner.id)
-        if (error) throw error
+        const response = await fetch(`/api/banners/${editingBanner.id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bannerData),
+        })
+        if (!response.ok) throw new Error('Failed to update banner')
 
         toast({
           title: "تم التحديث",
           description: "تم تحديث البانر بنجاح",
         })
       } else {
-        const { error } = await supabase.from("banners").insert(bannerData)
-        if (error) throw error
+        const response = await fetch('/api/banners', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(bannerData),
+        })
+        if (!response.ok) throw new Error('Failed to create banner')
 
         toast({
           title: "تم الإنشاء",
@@ -150,11 +197,13 @@ export function BannersManagement() {
       title: banner.title,
       subtitle: banner.subtitle || "",
       description: banner.description || "",
-      image_url: banner.image_url || "",
       background_color: banner.background_color,
       text_color: banner.text_color,
       button_text: banner.button_text || "",
       button_link: banner.button_link || "",
+      button_color: banner.button_color || "#2563eb",
+      offer_text: banner.offer_text || "",
+      badge_text: banner.badge_text || "",
       sort_order: banner.sort_order,
     })
     setShowDialog(true)
@@ -164,8 +213,10 @@ export function BannersManagement() {
     if (!confirm("هل أنت متأكد من حذف البانر؟")) return
 
     try {
-      const { error } = await supabase.from("banners").delete().eq("id", id)
-      if (error) throw error
+      const response = await fetch(`/api/banners/${id}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) throw new Error('Failed to delete banner')
 
       toast({
         title: "تم الحذف",
@@ -184,8 +235,14 @@ export function BannersManagement() {
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase.from("banners").update({ is_active: !currentStatus }).eq("id", id)
-      if (error) throw error
+      const response = await fetch(`/api/banners/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ is_active: !currentStatus }),
+      })
+      if (!response.ok) throw new Error('Failed to update banner status')
 
       toast({
         title: "تم التحديث",
@@ -207,12 +264,14 @@ export function BannersManagement() {
       title: "",
       subtitle: "",
       description: "",
-      image_url: "",
       background_color: "bg-gradient-to-r from-blue-600 to-blue-800",
-      text_color: "text-white",
+      text_color: "#ffffff",
       button_text: "",
       button_link: "",
-      sort_order: banners.length,
+      button_color: "#2563eb",
+      offer_text: "",
+      badge_text: "",
+      sort_order: 0,
     })
   }
 
@@ -248,110 +307,191 @@ export function BannersManagement() {
               إضافة بانر جديد
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>{editingBanner ? "تعديل البانر" : "إضافة بانر جديد"}</DialogTitle>
-            </DialogHeader>
+          <DialogContent
+            className="max-w-lg w-full max-h-[90vh] overflow-y-auto sm:max-w-xl md:max-w-2xl lg:max-w-3xl"
+            style={{ padding: 0 }}
+          >
+            <div className="p-6 sm:p-8 flex flex-col gap-6 min-h-[60vh]">
+              <DialogHeader>
+                <DialogTitle>{editingBanner ? "تعديل البانر" : "إضافة بانر جديد"}</DialogTitle>
+              </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">العنوان الرئيسي</label>
-                <Input
-                  value={formData.title}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="عنوان البانر"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">العنوان الفرعي</label>
-                <Input
-                  value={formData.subtitle}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, subtitle: e.target.value }))}
-                  placeholder="العنوان الفرعي (اختياري)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
-                <Textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                  placeholder="وصف البانر (اختياري)"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">رابط الصورة</label>
-                <Input
-                  value={formData.image_url}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, image_url: e.target.value }))}
-                  placeholder="https://example.com/image.jpg (اختياري)"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">لون الخلفية</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {backgroundOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setFormData((prev) => ({ ...prev, background_color: option.value }))}
-                      className={`p-3 rounded-lg border-2 transition-all ${
-                        formData.background_color === option.value
-                          ? "border-blue-500 ring-2 ring-blue-200"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <div className={`h-8 w-full rounded bg-gradient-to-r ${option.preview} mb-2`}></div>
-                      <span className="text-xs text-gray-600">{option.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">نص الزر</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">العنوان الرئيسي</label>
                   <Input
-                    value={formData.button_text}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, button_text: e.target.value }))}
-                    placeholder="تسوق الآن (اختياري)"
+                    value={formData.title}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                    placeholder="عنوان البانر"
+                    required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">رابط الزر</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">العنوان الفرعي</label>
                   <Input
-                    value={formData.button_link}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, button_link: e.target.value }))}
-                    placeholder="#"
+                    value={formData.subtitle}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, subtitle: e.target.value }))}
+                    placeholder="العنوان الفرعي (اختياري)"
                   />
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">ترتيب العرض</label>
-                <Input
-                  type="number"
-                  min="0"
-                  value={formData.sort_order}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, sort_order: Number(e.target.value) }))}
-                />
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">الوصف</label>
+                  <Textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                    placeholder="وصف البانر (اختياري)"
+                    rows={3}
+                  />
+                </div>
 
-              <div className="flex gap-2 pt-4">
-                <Button type="button" variant="outline" onClick={() => setShowDialog(false)} className="flex-1">
-                  إلغاء
-                </Button>
-                <Button type="submit" className="flex-1">
-                  {editingBanner ? "تحديث" : "إنشاء"}
-                </Button>
-              </div>
-            </form>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">لون الخلفية</label>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    {backgroundOptions.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => { setFormData((prev) => ({ ...prev, background_color: option.value })); setCustomBackground("") }}
+                        className={`p-3 rounded-lg border-2 transition-all ${
+                          formData.background_color === option.value && !customBackground
+                            ? "border-blue-500 ring-2 ring-blue-200"
+                            : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <div className={`h-8 w-full rounded bg-gradient-to-r ${option.preview} mb-2`}></div>
+                        <span className="text-xs text-gray-600">{option.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-2 mt-2">
+                    <input
+                      type="color"
+                      value={customBackground || "#ffffff"}
+                      onChange={e => {
+                        setCustomBackground(e.target.value)
+                        setFormData((prev) => ({ ...prev, background_color: e.target.value }))
+                      }}
+                      className="w-8 h-8 border rounded"
+                    />
+                    <Input
+                      type="text"
+                      value={customBackground}
+                      onChange={e => {
+                        setCustomBackground(e.target.value)
+                        setFormData((prev) => ({ ...prev, background_color: e.target.value }))
+                      }}
+                      placeholder="#hex أو rgb()"
+                      className="w-32"
+                    />
+                    <span className="text-xs text-gray-500">لون مخصص</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">لون الزر</label>
+                    <input
+                      type="color"
+                      value={customButtonColor || "#2563eb"}
+                      onChange={e => {
+                        setCustomButtonColor(e.target.value)
+                        setFormData((prev) => ({ ...prev, button_color: e.target.value }))
+                      }}
+                      className="w-8 h-8 border rounded"
+                    />
+                    <Input
+                      type="text"
+                      value={customButtonColor}
+                      onChange={e => {
+                        setCustomButtonColor(e.target.value)
+                        setFormData((prev) => ({ ...prev, button_color: e.target.value }))
+                      }}
+                      placeholder="#hex أو rgb()"
+                      className="w-32 mt-2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">لون النص</label>
+                    <input
+                      type="color"
+                      value={customTextColor || "#ffffff"}
+                      onChange={e => {
+                        setCustomTextColor(e.target.value)
+                        setFormData((prev) => ({ ...prev, text_color: e.target.value }))
+                      }}
+                      className="w-8 h-8 border rounded"
+                    />
+                    <Input
+                      type="text"
+                      value={customTextColor}
+                      onChange={e => {
+                        setCustomTextColor(e.target.value)
+                        setFormData((prev) => ({ ...prev, text_color: e.target.value }))
+                      }}
+                      placeholder="#hex أو rgb()"
+                      className="w-32 mt-2"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">نص الزر</label>
+                    <Input
+                      value={formData.button_text}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, button_text: e.target.value }))}
+                      placeholder="تسوق الآن (اختياري)"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">رابط الزر</label>
+                    <Input
+                      value={formData.button_link}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, button_link: e.target.value }))}
+                      placeholder="#"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">نص العرض (Offer Text)</label>
+                  <Input
+                    value={formData.offer_text}
+                    onChange={e => setFormData(prev => ({ ...prev, offer_text: e.target.value }))}
+                    placeholder="مثال: خصم يصل إلى 50%"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">نص الشارة (Badge Text)</label>
+                  <Input
+                    value={formData.badge_text}
+                    onChange={e => setFormData(prev => ({ ...prev, badge_text: e.target.value }))}
+                    placeholder="مثال: 50%"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">ترتيب العرض</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={formData.sort_order}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, sort_order: Number(e.target.value) }))}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setShowDialog(false)} className="flex-1">
+                    إلغاء
+                  </Button>
+                  <Button type="submit" className="flex-1">
+                    {editingBanner ? "تحديث" : "إنشاء"}
+                  </Button>
+                </div>
+              </form>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -393,13 +533,6 @@ export function BannersManagement() {
                 <div
                   className={`${banner.background_color} ${banner.text_color} rounded-lg p-4 relative overflow-hidden`}
                 >
-                  {banner.image_url && (
-                    <img
-                      src={banner.image_url || "/placeholder.svg"}
-                      alt={banner.title}
-                      className="absolute inset-0 w-full h-full object-cover opacity-20"
-                    />
-                  )}
                   <div className="relative z-10">
                     <h3 className="font-bold text-lg mb-1">{banner.title}</h3>
                     {banner.subtitle && <p className="text-sm opacity-90 mb-2">{banner.subtitle}</p>}

@@ -20,52 +20,54 @@ export function BannerComponent({ banners }: BannerComponentProps) {
   }, [banners.length])
 
   if (banners.length === 0) {
-    return (
-      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-5 mx-4 mt-4 flex items-center justify-between gap-4" style={{ fontFamily: 'Noto Sans Arabic, sans-serif' }}>
-        <div>
-          <h2 className="text-2xl font-bold mb-1">عروض خاصة</h2>
-          <p className="text-base text-blue-100">خصم يصل إلى 50% على جميع المنتجات</p>
-        </div>
-        <div className="flex items-center justify-center">
-          <span className="bg-yellow-400 text-blue-900 font-bold text-lg rounded-full w-16 h-16 flex items-center justify-center shadow-md">50%</span>
-        </div>
-      </div>
-    )
+    return null;
   }
 
-  const banner = banners[currentBanner]
+  const banner = banners[currentBanner];
 
   return (
-    <div className="relative mx-4 mt-4">
+    <div className="banner-section px-5 pt-4">
       <div
-        className="bg-blue-600 text-white rounded-2xl shadow-lg p-5 flex items-center justify-between gap-4 min-h-[90px]"
+        className="banner flex items-center justify-between rounded-xl p-5 relative overflow-hidden"
         style={{
-          fontFamily: 'Noto Sans Arabic, sans-serif',
-          backgroundImage: banner.image_url ? `url(${banner.image_url})` : undefined,
-          backgroundSize: banner.image_url ? 'cover' : undefined,
-          backgroundPosition: banner.image_url ? 'center' : undefined,
+          background: banner.background_color || "linear-gradient(135deg, #007bff 0%, #0056b3 100%)",
         }}
       >
-        <div className="relative z-10">
-          <h2 className="text-2xl font-bold mb-1">{banner.title}</h2>
-          {banner.description && <p className="text-base text-blue-100">{banner.description}</p>}
+        <div className="banner-content flex-1">
+          <h2
+            className="banner-title mb-1"
+            style={{ color: banner.text_color || '#fff', fontWeight: 700, fontSize: '18px' }}
+          >
+            {banner.title}
+          </h2>
+          {banner.subtitle && (
+            <p
+              className="banner-subtitle"
+              style={{ color: banner.text_color ? banner.text_color + 'CC' : 'rgba(255,255,255,0.9)', fontSize: '14px' }}
+            >
+              {banner.subtitle}
+            </p>
+          )}
         </div>
-        {/* No badge for dynamic banners since no badge/discount field exists */}
-        {banner.image_url && <div className="absolute inset-0 bg-black bg-opacity-30 rounded-2xl" />}
+        {banner.button_text && (
+          <div className="banner-image relative">
+            <div
+              className="banner-badge flex items-center justify-center shadow-md animate-pulse"
+              style={{
+                background: banner.button_color || '#ffc107',
+                color: banner.text_color ? banner.text_color : '#1a1a1a',
+                fontSize: '20px',
+                fontWeight: 700,
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+              }}
+            >
+              {banner.button_text}
+            </div>
+          </div>
+        )}
       </div>
-      {banners.length > 1 && (
-        <div className="flex justify-center mt-2 gap-1">
-          {banners.map((_, index) => (
-            <button
-              key={index}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentBanner ? "bg-blue-600" : "bg-gray-300"
-              }`}
-              onClick={() => setCurrentBanner(index)}
-            />
-          ))}
-        </div>
-      )}
     </div>
-  )
+  );
 }

@@ -3,20 +3,8 @@
 import { MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-const cities = [
-  "الرياض",
-  "جدة",
-  "الدمام",
-  "مكة المكرمة",
-  "المدينة المنورة",
-  "الطائف",
-  "تبوك",
-  "بريدة",
-  "خميس مشيط",
-  "الأحساء",
-]
-
 interface HomeFiltersProps {
+  cities: string[]
   nearbyOnly: boolean
   onNearbyToggle: (enabled: boolean) => void
   hasLocation: boolean
@@ -24,7 +12,7 @@ interface HomeFiltersProps {
   onCityChange: (city: string) => void
 }
 
-export function HomeFilters({ nearbyOnly, onNearbyToggle, hasLocation, selectedCity, onCityChange }: HomeFiltersProps) {
+export function HomeFilters({ cities, nearbyOnly, onNearbyToggle, hasLocation, selectedCity, onCityChange }: HomeFiltersProps) {
   return (
     <div className="flex items-center gap-3 overflow-x-auto pb-2 justify-end">
       {/* Location button first (rightmost in RTL) */}

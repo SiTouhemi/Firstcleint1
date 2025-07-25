@@ -20,113 +20,63 @@ export function RealTimeNotifications() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
-  const { supabase } = useApp()
   const { toast } = useToast()
 
   useEffect(() => {
     // Fetch initial notifications
     fetchNotifications()
-
-    // Subscribe to real-time notifications
-    const channel = supabase
-      .channel("notifications")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "notifications" }, (payload) => {
-        const newNotification = payload.new as Notification
-        setNotifications((prev) => [newNotification, ...prev])
-        setUnreadCount((prev) => prev + 1)
-
-        // Show toast notification
-        toast({
-          title: newNotification.title,
-          description: newNotification.message,
-        })
-      })
-      .subscribe()
-
-    // Subscribe to order changes
-    const orderChannel = supabase
-      .channel("orders")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "orders" }, (payload) => {
-        const newOrder = payload.new as any
-        createNotification(
-          "new_order",
-          "طلب جديد",
-          `طلب جديد رقم ${newOrder.order_number} من ${newOrder.customer_name}`,
-        )
-      })
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "orders" }, (payload) => {
-        const updatedOrder = payload.new as any
-        if (updatedOrder.status === "cancelled") {
-          createNotification("order_cancelled", "طلب ملغي", `تم إلغاء الطلب رقم ${updatedOrder.order_number}`)
-        }
-      })
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-      supabase.removeChannel(orderChannel)
-    }
-  }, [supabase, toast])
+  }, [])
 
   const fetchNotifications = async () => {
     try {
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20)
-
-      if (error) throw error
-
-      setNotifications(data || [])
-      setUnreadCount(data?.filter((n) => !n.is_read).length || 0)
+      const res = await fetch('/api/notifications')
+      const data = await res.json()
+      setNotifications(data.success ? data.data : [])
+      setUnreadCount(data.data?.filter((n: any) => !n.is_read).length || 0)
     } catch (error) {
-      console.error("Error fetching notifications:", error)
+      console.error('Error fetching notifications:', error)
     }
   }
 
   const createNotification = async (type: string, title: string, message: string, data?: any) => {
     try {
-      await supabase.from("notifications").insert({
-        type,
-        title,
-        message,
-        data,
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type, title, message, data })
       })
     } catch (error) {
-      console.error("Error creating notification:", error)
+      console.error('Error creating notification:', error)
     }
   }
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await supabase.from("notifications").update({ is_read: true }).eq("id", notificationId)
-
+      await fetch(`/api/notifications/${notificationId}/read`, { method: 'POST' })
       setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)))
       setUnreadCount((prev) => Math.max(0, prev - 1))
     } catch (error) {
-      console.error("Error marking notification as read:", error)
+      console.error('Error marking notification as read:', error)
     }
   }
 
   const markAllAsRead = async () => {
     try {
-      await supabase.from("notifications").update({ is_read: true }).eq("is_read", false)
-
+      await fetch('/api/notifications/mark-all-read', { method: 'POST' })
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
       setUnreadCount(0)
     } catch (error) {
-      console.error("Error marking all notifications as read:", error)
+      console.error('Error marking all notifications as read:', error)
     }
   }
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case "new_order":
+      case 'new_order':
         return <ShoppingCart className="h-5 w-5 text-blue-600" />
-      case "order_cancelled":
+      case 'order_cancelled':
         return <AlertCircle className="h-5 w-5 text-red-600" />
-      case "low_stock":
+      case 'low_stock':
         return <Package className="h-5 w-5 text-orange-600" />
       default:
         return <Bell className="h-5 w-5 text-gray-600" />

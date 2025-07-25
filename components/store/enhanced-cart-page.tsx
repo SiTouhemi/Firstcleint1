@@ -40,21 +40,19 @@ export function EnhancedCartPage({ onBack }: CartPageProps) {
     }
 
     try {
-      const { data: promoCode, error } = await supabase
-        .from("promo_codes")
-        .select("*")
-        .eq("code", discountCode.toUpperCase())
-        .eq("is_active", true)
-        .single()
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/promo-codes/validate?code=${discountCode.toUpperCase()}`)
+      const data = await response.json()
 
-      if (error || !promoCode) {
+      if (!data.success) {
         toast({
           title: "كود خصم غير صالح",
-          description: "يرجى التحقق من كود الخصم والمحاولة مرة أخرى",
+          description: data.error || "يرجى التحقق من كود الخصم والمحاولة مرة أخرى",
           variant: "destructive",
         })
         return
       }
+
+      const promoCode = data.promoCode
 
       // Check if code is expired
       if (promoCode.valid_until && new Date(promoCode.valid_until) < new Date()) {

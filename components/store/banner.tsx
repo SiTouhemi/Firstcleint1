@@ -3,28 +3,12 @@
 import { useState, useEffect } from "react"
 import type { Banner } from "@/types"
 
-export function BannerComponent() {
-  const [banners, setBanners] = useState<Banner[]>([])
+interface BannerComponentProps {
+  banners: Banner[]
+}
+
+export function BannerComponent({ banners }: BannerComponentProps) {
   const [currentBanner, setCurrentBanner] = useState(0)
-
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
-        const response = await fetch(`${backendUrl}/api/banners`)
-        if (response.ok) {
-          const data = await response.json()
-          if (data.success) {
-            setBanners(data.data)
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching banners:", error)
-      }
-    }
-
-    fetchBanners()
-  }, [])
 
   useEffect(() => {
     if (banners.length > 1) {

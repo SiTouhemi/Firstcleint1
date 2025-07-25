@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { useApp } from "@/app/providers"
 import { useToast } from "@/hooks/use-toast"
 
 interface PromoCode {
@@ -23,8 +22,8 @@ interface PromoCode {
   usage_limit?: number
   used_count: number
   is_active: boolean
-  valid_from: string
-  valid_until?: string
+  start_date: string
+  end_date?: string
   created_at: string
 }
 
@@ -33,7 +32,6 @@ export function PromoCodesManagement() {
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
   const [editingCode, setEditingCode] = useState<PromoCode | null>(null)
-  const { supabase } = useApp()
   const { toast } = useToast()
 
   const [formData, setFormData] = useState({
@@ -44,8 +42,8 @@ export function PromoCodesManagement() {
     min_order_amount: 0,
     max_discount_amount: 0,
     usage_limit: 0,
-    valid_from: "",
-    valid_until: "",
+    start_date: "",
+    end_date: "",
   })
 
   useEffect(() => {
@@ -53,11 +51,15 @@ export function PromoCodesManagement() {
   }, [])
 
   const fetchPromoCodes = async () => {
+    setLoading(true)
     try {
-      const { data, error } = await supabase.from("promo_codes").select("*").order("created_at", { ascending: false })
-
-      if (error) throw error
-      setPromoCodes(data || [])
+      const response = await fetch("/api/promo-codes")
+      const result = await response.json()
+      if (result.success) {
+        setPromoCodes(result.data || [])
+      } else {
+        throw new Error(result.error)
+      }
     } catch (error) {
       console.error("Error fetching promo codes:", error)
       toast({
@@ -72,7 +74,6 @@ export function PromoCodesManagement() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
     if (!formData.code.trim() || !formData.description.trim() || formData.discount_value <= 0) {
       toast({
         title: "بيانات ناقصة",
@@ -81,34 +82,40 @@ export function PromoCodesManagement() {
       })
       return
     }
-
     try {
       const promoData = {
         ...formData,
         code: formData.code.toUpperCase(),
         max_discount_amount: formData.max_discount_amount || null,
         usage_limit: formData.usage_limit || null,
-        valid_until: formData.valid_until || null,
+        end_date: formData.end_date || null,
       }
-
+      let response, result
       if (editingCode) {
-        const { error } = await supabase.from("promo_codes").update(promoData).eq("id", editingCode.id)
-        if (error) throw error
-
-        toast({
-          title: "تم التحديث",
-          description: "تم تحديث كود الخصم بنجاح",
+        response = await fetch("/api/promo-codes", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingCode.id, ...promoData })
         })
+        result = await response.json()
+        if (result.success) {
+          toast({ title: "تم التحديث", description: "تم تحديث كود الخصم بنجاح" })
+        } else {
+          throw new Error(result.error)
+        }
       } else {
-        const { error } = await supabase.from("promo_codes").insert(promoData)
-        if (error) throw error
-
-        toast({
-          title: "تم الإنشاء",
-          description: "تم إنشاء كود الخصم بنجاح",
+        response = await fetch("/api/promo-codes", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(promoData)
         })
+        result = await response.json()
+        if (result.success) {
+          toast({ title: "تم الإنشاء", description: "تم إنشاء كود الخصم بنجاح" })
+        } else {
+          throw new Error(result.error)
+        }
       }
-
       setShowDialog(false)
       setEditingCode(null)
       resetForm()
@@ -117,7 +124,7 @@ export function PromoCodesManagement() {
       console.error("Error saving promo code:", error)
       toast({
         title: "خطأ",
-        description: error.message.includes("duplicate") ? "كود الخصم موجود مسبقاً" : "حدث خطأ أثناء الحفظ",
+        description: error.message?.includes("duplicate") ? "كود الخصم موجود مسبقاً" : "حدث خطأ أثناء الحفظ",
         variant: "destructive",
       })
     }
@@ -133,24 +140,27 @@ export function PromoCodesManagement() {
       min_order_amount: promoCode.min_order_amount,
       max_discount_amount: promoCode.max_discount_amount || 0,
       usage_limit: promoCode.usage_limit || 0,
-      valid_from: promoCode.valid_from.split("T")[0],
-      valid_until: promoCode.valid_until ? promoCode.valid_until.split("T")[0] : "",
+      start_date: promoCode.start_date ? promoCode.start_date.split("T")[0] : "",
+      end_date: promoCode.end_date ? promoCode.end_date.split("T")[0] : "",
     })
     setShowDialog(true)
   }
 
   const handleDelete = async (id: string) => {
     if (!confirm("هل أنت متأكد من حذف كود الخصم؟")) return
-
     try {
-      const { error } = await supabase.from("promo_codes").delete().eq("id", id)
-      if (error) throw error
-
-      toast({
-        title: "تم الحذف",
-        description: "تم حذف كود الخصم بنجاح",
+      const response = await fetch("/api/promo-codes", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
       })
-      fetchPromoCodes()
+      const result = await response.json()
+      if (result.success) {
+        toast({ title: "تم الحذف", description: "تم حذف كود الخصم بنجاح" })
+        fetchPromoCodes()
+      } else {
+        throw new Error(result.error)
+      }
     } catch (error) {
       console.error("Error deleting promo code:", error)
       toast({
@@ -163,14 +173,18 @@ export function PromoCodesManagement() {
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
     try {
-      const { error } = await supabase.from("promo_codes").update({ is_active: !currentStatus }).eq("id", id)
-      if (error) throw error
-
-      toast({
-        title: "تم التحديث",
-        description: `تم ${!currentStatus ? "تفعيل" : "إلغاء تفعيل"} كود الخصم`,
+      const response = await fetch("/api/promo-codes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, is_active: !currentStatus })
       })
-      fetchPromoCodes()
+      const result = await response.json()
+      if (result.success) {
+        toast({ title: "تم التحديث", description: `تم ${!currentStatus ? "تفعيل" : "إلغاء تفعيل"} كود الخصم` })
+        fetchPromoCodes()
+      } else {
+        throw new Error(result.error)
+      }
     } catch (error) {
       console.error("Error updating promo code status:", error)
       toast({
@@ -198,8 +212,8 @@ export function PromoCodesManagement() {
       min_order_amount: 0,
       max_discount_amount: 0,
       usage_limit: 0,
-      valid_from: "",
-      valid_until: "",
+      start_date: "",
+      end_date: "",
     })
   }
 
@@ -207,9 +221,9 @@ export function PromoCodesManagement() {
     return new Date(dateString).toLocaleDateString("ar-SA")
   }
 
-  const isExpired = (validUntil?: string) => {
-    if (!validUntil) return false
-    return new Date(validUntil) < new Date()
+  const isExpired = (endDate?: string) => {
+    if (!endDate) return false
+    return new Date(endDate) < new Date()
   }
 
   if (loading) {
@@ -339,8 +353,8 @@ export function PromoCodesManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">تاريخ البداية</label>
                   <Input
                     type="date"
-                    value={formData.valid_from}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, valid_from: e.target.value }))}
+                    value={formData.start_date}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, start_date: e.target.value }))}
                     required
                   />
                 </div>
@@ -349,8 +363,8 @@ export function PromoCodesManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">تاريخ الانتهاء (اختياري)</label>
                   <Input
                     type="date"
-                    value={formData.valid_until}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, valid_until: e.target.value }))}
+                    value={formData.end_date}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, end_date: e.target.value }))}
                   />
                 </div>
               </div>
@@ -440,7 +454,7 @@ export function PromoCodesManagement() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">صالح حتى:</span>
                   <span className="font-medium text-sm">
-                    {promoCode.valid_until ? formatDate(promoCode.valid_until) : "بلا انتهاء"}
+                    {promoCode.end_date ? formatDate(promoCode.end_date) : "بلا انتهاء"}
                   </span>
                 </div>
 
@@ -448,14 +462,14 @@ export function PromoCodesManagement() {
                   <div className="flex items-center gap-2">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        promoCode.is_active && !isExpired(promoCode.valid_until)
+                        promoCode.is_active && !isExpired(promoCode.end_date)
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {promoCode.is_active && !isExpired(promoCode.valid_until) ? "نشط" : "غير نشط"}
+                      {promoCode.is_active && !isExpired(promoCode.end_date) ? "نشط" : "غير نشط"}
                     </span>
-                    {isExpired(promoCode.valid_until) && (
+                    {isExpired(promoCode.end_date) && (
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                         منتهي الصلاحية
                       </span>
@@ -466,7 +480,7 @@ export function PromoCodesManagement() {
                     variant="outline"
                     size="sm"
                     onClick={() => toggleStatus(promoCode.id, promoCode.is_active)}
-                    disabled={isExpired(promoCode.valid_until)}
+                    disabled={isExpired(promoCode.end_date)}
                   >
                     {promoCode.is_active ? "إلغاء التفعيل" : "تفعيل"}
                   </Button>

@@ -6,6 +6,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useCart } from "@/hooks/use-cart"
 import { useToast } from "@/hooks/use-toast"
 import type { Product } from "@/types"
+import { useState } from "react"
+import { useFavorites } from "@/hooks/use-favorites"
 
 interface ProductGridProps {
   products: Product[]
@@ -15,44 +17,16 @@ interface ProductGridProps {
 export function ProductGrid({ products, loading }: ProductGridProps) {
   const { addItem } = useCart()
   const { toast } = useToast()
-
-  const handleAddToCart = (product: Product) => {
-    if (!product.available || product.stock_quantity <= 0) {
-      toast({
-        title: "المنتج غير متوفر",
-        description: "هذا المنتج غير متوفر حالياً",
-        variant: "destructive",
-      })
-      return
-    }
-
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      image_url: product.image_url,
-      unit: product.unit,
-    })
-
-    toast({
-      title: "تم إضافة المنتج",
-      description: `تم إضافة ${product.name} إلى السلة`,
-    })
-  }
+  const { isFavorite, toggleFavorite } = useFavorites()
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-3">
-              <div className="bg-gray-200 rounded-lg h-32 mb-3" />
-              <div className="bg-gray-200 h-4 rounded mb-2" />
-              <div className="bg-gray-200 h-3 rounded mb-2" />
-              <div className="bg-gray-200 h-6 rounded" />
-            </CardContent>
-          </Card>
-        ))}
+      <div className="products-section px-0">
+        <div className="products-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-[480px] sm:max-w-2xl md:max-w-4xl mx-auto">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="bg-white rounded-xl shadow animate-pulse w-full h-[220px] md:h-[250px]" />
+          ))}
+        </div>
       </div>
     )
   }
@@ -66,52 +40,64 @@ export function ProductGrid({ products, loading }: ProductGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4">
-      {products.map((product) => (
-        <Card key={product.id} className="overflow-hidden">
-          <CardContent className="p-3">
-            <div className="relative mb-3">
+    <div className="products-section px-0">
+      <div className="products-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 max-w-[480px] sm:max-w-2xl md:max-w-4xl mx-auto">
+        {products.map((product) => (
+          <div
+            key={product.id}
+            className="product-card bg-white rounded-xl overflow-hidden shadow transition-all duration-300 cursor-pointer w-full min-w-[140px] sm:min-w-[160px] md:min-w-[180px] md:h-auto"
+          >
+            <div className="product-image relative w-full h-[120px] sm:h-[140px] md:h-[160px] overflow-hidden">
               <img
                 src={product.image_url || "/placeholder.svg?height=120&width=120&query=product"}
                 alt={product.name}
-                className="w-full h-32 object-cover rounded-lg"
+                className="w-full h-full object-cover transition-transform duration-300"
               />
-              {!product.available && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">غير متوفر</span>
-                </div>
-              )}
-              {product.distance && (
-                <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded-full">
-                  {product.distance.toFixed(1)} كم
-                </div>
-              )}
-            </div>
-
-            <h3 className="font-medium text-gray-900 text-sm mb-1 line-clamp-2">{product.name}</h3>
-
-            {product.description && <p className="text-xs text-gray-600 mb-2 line-clamp-2">{product.description}</p>}
-
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-lg font-bold text-blue-600">{product.price} ر.س</span>
-                {product.unit && <span className="text-xs text-gray-500">/{product.unit}</span>}
-              </div>
-
-              <Button
-                size="sm"
-                onClick={() => handleAddToCart(product)}
-                disabled={!product.available || product.stock_quantity <= 0}
-                className="h-8 w-8 p-0"
+              <button
+                className={`favorite-btn absolute top-2 right-2 bg-white/90 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${isFavorite(product.id) ? 'text-red-600' : 'text-gray-400'}`}
+                aria-label="إضافة للمفضلة"
+                onClick={() => toggleFavorite(product.id)}
+                type="button"
               >
-                <Plus className="h-4 w-4" />
-              </Button>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </button>
             </div>
-
-            {product.store_name && <p className="text-xs text-gray-500 mt-1">{product.store_name}</p>}
-          </CardContent>
-        </Card>
-      ))}
+            <div className="product-info p-3">
+              <h3 className="product-name text-[13px] md:text-[15px] font-semibold text-gray-900 mb-1 leading-tight line-clamp-2 truncate">{product.name}</h3>
+              {product.description && <p className="product-description text-[11px] md:text-[13px] text-gray-600 mb-2 leading-tight line-clamp-2 truncate">{product.description}</p>}
+              <div className="product-price text-[14px] md:text-[16px] font-bold text-blue-600 mb-2 truncate">{product.price} {product.unit && <span className="text-[12px] md:text-[14px]">ر.س/{product.unit}</span>}</div>
+              {product.available === false || (product.stock_quantity !== undefined && product.stock_quantity <= 0) ? (
+                <div className="text-xs text-red-500 font-semibold text-center py-2">المنتج غير متوفر حالياً</div>
+              ) : (
+                <button
+                  className="add-to-cart-btn w-full bg-gray-50 border border-gray-200 py-2 rounded-lg text-[11px] md:text-[13px] font-medium flex items-center justify-center gap-1 text-blue-600 transition-all duration-200 hover:bg-blue-600 hover:text-white hover:border-blue-600"
+                  onClick={() => {
+                    addItem({
+                      id: product.id,
+                      name: product.name,
+                      price: product.price,
+                      image_url: product.image_url,
+                      unit: product.unit,
+                    })
+                    toast({
+                      title: "تم إضافة المنتج",
+                      description: `تم إضافة ${product.name} إلى السلة`,
+                    })
+                  }}
+                  type="button"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2"/>
+                  </svg>
+                  إضافة للسلة
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

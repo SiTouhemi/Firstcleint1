@@ -186,6 +186,26 @@ export function ProductsManagement() {
     )
   }
 
+  // Add this function for uploading to imgbb
+  const IMGBB_API_KEY = "e3ed25911ada746cffe7d72034fee94f";
+  const IMGBB_ALBUM = "client1";
+
+  async function uploadToImgbb(file) {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("album", IMGBB_ALBUM);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+      method: "POST",
+      body: formData,
+    });
+    const data = await res.json();
+    if (data.success) {
+      return data.data.url;
+    } else {
+      throw new Error("Image upload failed");
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -327,8 +347,24 @@ export function ProductsManagement() {
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">رابط الصورة</label>
-              <Input value={formData.image_url} onChange={e => setFormData(f => ({ ...f, image_url: e.target.value }))} placeholder="https://..." />
+              <label className="block text-sm font-medium text-gray-700 mb-1">صورة المنتج</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  try {
+                    const url = await uploadToImgbb(file);
+                    setFormData((f) => ({ ...f, image_url: url }));
+                  } catch (err) {
+                    alert("Image upload failed");
+                  }
+                }}
+              />
+              {formData.image_url && (
+                <img src={formData.image_url} alt="Preview" style={{ maxWidth: 200, marginTop: 8 }} />
+              )}
             </div>
             
             <div>

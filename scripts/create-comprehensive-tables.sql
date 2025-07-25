@@ -65,6 +65,18 @@ CREATE TABLE IF NOT EXISTS admin_users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  type VARCHAR(50) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  message TEXT NOT NULL,
+  data JSONB,
+  is_read BOOLEAN DEFAULT false,
+  admin_user_id UUID REFERENCES admin_users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Categories table
 CREATE TABLE IF NOT EXISTS categories (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -80,23 +92,19 @@ CREATE TABLE IF NOT EXISTS categories (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Products table
+-- Products table (updated structure)
 CREATE TABLE IF NOT EXISTS products (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
+  store_id UUID REFERENCES stores(id),
+  category_id UUID REFERENCES categories(id),
+  subcategory_id UUID REFERENCES categories(id),
   price DECIMAL(10,2) NOT NULL,
-  category_id UUID REFERENCES categories(id) ON DELETE SET NULL,
-  category_key VARCHAR(100),
-  unit VARCHAR(50),
-  image_url TEXT,
-  images TEXT[],
-  stock_quantity INTEGER DEFAULT 0,
   is_active BOOLEAN DEFAULT true,
-  is_featured BOOLEAN DEFAULT false,
-  sort_order INTEGER DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  description TEXT,
+  image_url TEXT,
+  unit VARCHAR(50),
+  name VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) UNIQUE NOT NULL
 );
 
 -- Users table (customers)

@@ -105,4 +105,23 @@ router.get("/", async (req, res) => {
   }
 })
 
+// PATCH /api/orders/:id - Update order status
+router.patch('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  if (!status) return res.status(400).json({ success: false, error: 'Status is required' });
+  try {
+    const { data, error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String((err as Error).message || err) });
+  }
+});
+
 export default router

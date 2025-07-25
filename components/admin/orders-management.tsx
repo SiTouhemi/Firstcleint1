@@ -1,54 +1,53 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ShoppingCart, Eye, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export function OrdersManagement() {
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("all")
 
-  const sampleOrders = [
-    {
-      id: "1001",
-      customerName: "أحمد محمد",
-      customerPhone: "0501234567",
-      customerAddress: "الرياض، مصر الجديدة، شارع العروبة",
-      total: 597,
-      status: "delivered",
-      date: "2024-01-15",
-      time: "14:30",
-      items: [
-        { productName: "حذاء رياضي أديداس", quantity: 1, price: 299 },
-        { productName: "قميص قطني كلاسيكي", quantity: 2, price: 149 },
-      ],
-    },
-    {
-      id: "1002",
-      customerName: "فاطمة علي",
-      customerPhone: "0509876543",
-      customerAddress: "الإسكندرية، سموحة، طريق الجيش",
-      total: 599,
-      status: "shipped",
-      date: "2024-01-14",
-      time: "10:15",
-      items: [{ productName: "سماعات لاسلكية", quantity: 1, price: 599 }],
-    },
-    {
-      id: "1003",
-      customerName: "خالد السعد",
-      customerPhone: "0512345678",
-      customerAddress: "الجيزة، المهندسين، شارع جامعة الدول العربية",
-      total: 648,
-      status: "processing",
-      date: "2024-01-13",
-      time: "16:45",
-      items: [
-        { productName: "حقيبة يد جلدية", quantity: 1, price: 399 },
-        { productName: "حذاء كاجوال", quantity: 1, price: 249 },
-      ],
-    },
-  ]
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const fetchOrders = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch("/api/orders")
+      const result = await response.json()
+      if (result.success) {
+        setOrders(result.data || [])
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      setOrders([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleStatusChange = async (orderId, newStatus) => {
+    try {
+      const response = await fetch("/api/orders", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: orderId, status: newStatus })
+      })
+      const result = await response.json()
+      if (result.success) {
+        fetchOrders()
+      } else {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      // Optionally show error toast
+    }
+  }
 
   const getStatusText = (status: string) => {
     switch (status) {
@@ -84,7 +83,7 @@ export function OrdersManagement() {
     }
   }
 
-  const filteredOrders = sampleOrders.filter((order) => statusFilter === "all" || order.status === statusFilter)
+  const filteredOrders = orders.filter((order) => statusFilter === "all" || order.status === statusFilter)
 
   return (
     <div className="space-y-6">
@@ -124,20 +123,33 @@ export function OrdersManagement() {
 
       {/* Orders List */}
       <div className="space-y-4">
-        {filteredOrders.map((order) => (
+        {loading ? (
+          <div className="text-center py-12">جاري التحميل...</div>
+        ) : filteredOrders.map((order) => (
           <Card key={order.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-lg">طلب #{order.id}</CardTitle>
+                  <CardTitle className="text-lg">طلب #{order.order_number || order.id}</CardTitle>
                   <p className="text-sm text-gray-600">
-                    {order.date} - {order.time}
+                    {order.created_at ? new Date(order.created_at).toLocaleDateString("ar-SA") : "-"}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                     {getStatusText(order.status)}
                   </span>
+                  <select
+                    value={order.status}
+                    onChange={e => handleStatusChange(order.id, e.target.value)}
+                    className="ml-2 border rounded px-2 py-1 text-xs"
+                  >
+                    <option value="pending">في الانتظار</option>
+                    <option value="processing">قيد المعالجة</option>
+                    <option value="shipped">تم الشحن</option>
+                    <option value="delivered">تم التسليم</option>
+                    <option value="cancelled">ملغي</option>
+                  </select>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -149,29 +161,14 @@ export function OrdersManagement() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <h4 className="font-medium text-gray-900 mb-1">معلومات العميل</h4>
-                    <p className="text-sm text-gray-600">{order.customerName}</p>
-                    <p className="text-sm text-gray-600">{order.customerPhone}</p>
+                    <p className="text-sm text-gray-600">{order.customer_name}</p>
+                    <p className="text-sm text-gray-600">{order.customer_phone}</p>
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900 mb-1">عنوان التوصيل</h4>
-                    <p className="text-sm text-gray-600">{order.customerAddress}</p>
+                    <p className="text-sm text-gray-600">{order.customer_address}</p>
                   </div>
                 </div>
-
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">المنتجات</h4>
-                  <div className="space-y-2">
-                    {order.items.map((item, index) => (
-                      <div key={index} className="flex justify-between items-center text-sm">
-                        <span className="text-gray-600">
-                          {item.productName} × {item.quantity}
-                        </span>
-                        <span className="font-medium">{item.price * item.quantity} ر.س</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
                 <div className="flex justify-between items-center pt-3 border-t">
                   <span className="font-medium text-gray-900">المجموع الكلي:</span>
                   <span className="text-lg font-bold text-blue-600">{order.total} ر.س</span>

@@ -349,8 +349,8 @@ export function CategoriesManagement() {
         </Dialog>
       </div>
 
-      {/* Categories Tree */}
-      <div className="space-y-4">
+      {/* Categories Grid - Compact and Beautiful */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {mainCategories.map((category, idx) => {
           const gradients = [
             'linear-gradient(135deg, rgb(227, 242, 253) 0%, rgb(187, 222, 251) 100%)', // blue
@@ -363,143 +363,105 @@ export function CategoriesManagement() {
           const background = gradients[idx % gradients.length];
           const subcategories = getSubcategories(category.id)
           return (
-            <Card key={category.id} className="hover:shadow-lg transition-all duration-300"
+            <Card key={category.id} className="hover:shadow-lg transition-shadow duration-300 border-0 relative overflow-visible p-3 min-h-[180px] max-w-xs mx-auto"
               style={{
-                width: '20vh',
-                height: '20vh',
-                borderColor: 'rgb(33, 150, 243)',
                 background,
-                opacity: 0.8,
-                fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif',
                 color: '#1a1a1a',
-                textAlign: 'center',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderRadius: '1rem',
-                padding: '1.25rem',
-                cursor: 'pointer',
-                position: 'relative',
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'transform 0.3s, box-shadow 0.3s',
+                fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif',
               }}
             >
-              <CardHeader className="pb-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <span className="text-2xl">
-                        {category.icon || <FolderOpen className="h-6 w-6 text-blue-600" />}
-                      </span>
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg text-gray-900">{category.name}</CardTitle>
-                      {category.description && <p className="text-sm text-gray-600 mt-1">{category.description}</p>}
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                          {subcategories.length} فئة فرعية
-                        </span>
-                        <span className="text-xs text-gray-500">ترتيب: {category.sort_order}</span>
-                      </div>
-                    </div>
+              <CardHeader className="pb-1 flex flex-col gap-1 p-0">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 bg-white/80 rounded-lg shadow">
+                    <span className="text-xl">
+                      {category.icon || <FolderOpen className="h-5 w-5 text-blue-600" />}
+                    </span>
                   </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(category)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-red-600 hover:text-red-700"
-                      onClick={() => handleDelete(category.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                    {/* Add Subcategory Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="ml-2"
-                      onClick={() => {
-                        setEditingCategory(null);
-                        setFormData({
-                          name: "",
-                          description: "",
-                          icon: "",
-                          parent_id: category.id,
-                          sort_order: categories.length,
-                        });
-                        setShowDialog(true);
-                      }}
-                    >
-                      <Plus className="h-4 w-4 mr-1" />
-                      إضافة فئة فرعية
-                    </Button>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base text-gray-900 truncate">{category.name}</CardTitle>
+                    {category.description && <p className="text-xs text-gray-600 mt-0.5 truncate">{category.description}</p>}
+                    <div className="flex items-center gap-1 mt-1 flex-wrap">
+                      <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full">
+                        {subcategories.length} فئة فرعية
+                      </span>
+                      <span className="text-[10px] text-gray-500">ترتيب: {category.sort_order}</span>
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${category.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{category.is_active ? 'نشطة' : 'غير نشطة'}</span>
+                    </div>
                   </div>
                 </div>
+                <div className="flex gap-1 mt-1">
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEdit(category)}>
+                    <Edit className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-red-600 hover:text-red-700"
+                    onClick={() => handleDelete(category.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-full text-xs py-1"
+                  onClick={() => {
+                    setEditingCategory(null);
+                    setFormData({
+                      name: "",
+                      description: "",
+                      icon: "",
+                      parent_id: category.id,
+                      sort_order: categories.length,
+                    });
+                    setShowDialog(true);
+                  }}
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  إضافة فئة فرعية
+                </Button>
               </CardHeader>
-
               {subcategories.length > 0 && (
                 <CardContent className="pt-0">
-                  <div className="border-t pt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
-                      <ChevronRight className="h-4 w-4" />
+                  <div className="border-t pt-2 mt-2">
+                    <h4 className="text-xs font-medium text-gray-700 mb-1 flex items-center gap-2">
+                      <ChevronRight className="h-3 w-3" />
                       الفئات الفرعية
                     </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div className="flex flex-wrap gap-1">
                       {subcategories.map((subcategory, subIdx) => {
                         const subBackground = gradients[subIdx % gradients.length];
                         return (
                           <div
                             key={subcategory.id}
+                            className="flex flex-col items-center justify-center p-2 rounded-lg shadow border min-w-[80px] bg-white/80"
                             style={{
-                              width: '20vh',
-                              height: '20vh',
-                              borderColor: 'rgb(33, 150, 243)',
                               background: subBackground,
-                              opacity: 0.8,
-                              fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif',
                               color: '#1a1a1a',
-                              textAlign: 'center',
-                              borderWidth: '1px',
-                              borderStyle: 'solid',
-                              borderRadius: '1rem',
-                              padding: '1.25rem',
-                              cursor: 'pointer',
-                              position: 'relative',
-                              overflow: 'hidden',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transition: 'transform 0.3s, box-shadow 0.3s',
                             }}
                           >
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">
-                                {subcategory.icon || <Folder className="h-4 w-4 text-gray-400" />}
-                              </span>
-                              <span className="text-sm font-medium text-gray-900">{subcategory.name}</span>
-                            </div>
-                            <div className="flex gap-1">
+                            <span className="text-base mb-0.5">
+                              {subcategory.icon || <Folder className="h-3 w-3 text-gray-400" />}
+                            </span>
+                            <span className="text-[11px] font-medium text-gray-900 truncate">{subcategory.name}</span>
+                            <span className={`text-[10px] px-1 py-0.5 rounded-full mt-1 ${subcategory.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{subcategory.is_active ? 'نشطة' : 'غير نشطة'}</span>
+                            <div className="flex gap-1 mt-1">
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6"
+                                className="h-5 w-5"
                                 onClick={() => handleEdit(subcategory)}
                               >
-                                <Edit className="h-3 w-3" />
+                                <Edit className="h-2.5 w-2.5" />
                               </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-6 w-6 text-red-600 hover:text-red-700"
+                                className="h-5 w-5 text-red-600 hover:text-red-700"
                                 onClick={() => handleDelete(subcategory.id)}
                               >
-                                <Trash2 className="h-3 w-3" />
+                                <Trash2 className="h-2.5 w-2.5" />
                               </Button>
                             </div>
                           </div>

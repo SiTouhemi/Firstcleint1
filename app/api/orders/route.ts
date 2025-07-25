@@ -108,3 +108,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: "Failed to create order" }, { status: 500 })
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  const body = await req.json();
+  const { id, status } = body;
+  if (!id || !status) return NextResponse.json({ success: false, error: 'Order id and status are required' }, { status: 400 });
+  const res = await fetch(`http://localhost:4000/api/orders/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+  const data = await res.json();
+  return NextResponse.json(data, { status: res.status });
+}

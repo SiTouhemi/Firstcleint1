@@ -12,6 +12,8 @@ import { PromoCodesManagement } from "./promo-codes-management"
 import { UsersManagement } from "./users-management"
 import { BannersManagement } from "./banners-management"
 import { RealTimeNotifications } from "./real-time-notifications"
+import { CitiesManagement } from "./cities-management";
+import { MapPin } from "lucide-react";
 
 interface AdminDashboardProps {
   onLogout: () => void
@@ -40,6 +42,8 @@ export function ComprehensiveDashboard({ onLogout }: AdminDashboardProps) {
         return <UsersManagement />
       case "banners":
         return <BannersManagement />
+      case "cities":
+        return <CitiesManagement />
       default:
         return <DashboardOverview />
     }

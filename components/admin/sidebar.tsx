@@ -54,33 +54,21 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     },
     {
       id: "orders",
-      label: "إدارة الطلبات",
+      label: "طلبات العملاء",
       icon: ShoppingCart,
       description: "متابعة ومعالجة الطلبات",
     },
     {
-      id: "locations",
-      label: "إدارة المواقع",
+      id: "cities",
+      label: "إدارة المدن",
       icon: MapPin,
-      description: "المدن والأحياء",
+      description: "إضافة وتفعيل/تعطيل المدن المتاحة",
     },
     {
       id: "promo-codes",
       label: "أكواد الخصم",
       icon: Percent,
-      description: "إنشاء عروض وخصومات",
-    },
-    {
-      id: "banners",
-      label: "إدارة البانرات",
-      icon: ImageIcon,
-      description: "البانرات الإعلانية",
-    },
-    {
-      id: "analytics",
-      label: "التقارير والتحليلات",
-      icon: BarChart3,
-      description: "تقارير مفصلة",
+      description: "إدارة أكواد الخصم والعروض الترويجية",
     },
     {
       id: "settings",

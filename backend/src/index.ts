@@ -12,6 +12,8 @@ import geocodeRouter from "./routes/geocode"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
 import { createClient } from "@supabase/supabase-js"
+import citiesRouter from "./routes/cities"
+import promoCodesRouter from "./routes/promo-codes"
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") })
 
@@ -56,6 +58,8 @@ app.use("/api/stores", storesRouter)
 app.use("/api/banners", bannersRouter)
 app.use("/api/orders", ordersRouter)
 app.use("/api", geocodeRouter)
+app.use("/api/cities", citiesRouter)
+app.use("/api/promo-codes", promoCodesRouter)
 
 // Admin login endpoint
 app.post("/api/admin/login", async (req, res) => {

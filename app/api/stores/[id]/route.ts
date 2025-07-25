@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/backend/api/config/database"
+import { supabase } from "@/backend/src/config/database"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {

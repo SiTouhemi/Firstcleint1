@@ -1,5 +1,18 @@
 import express from "express"
 
+// Google Maps Geocoding API response types
+interface GoogleMapsGeocodingResponse {
+  results: Array<{
+    address_components: Array<{
+      long_name: string
+      short_name: string
+      types: string[]
+    }>
+    formatted_address: string
+  }>
+  status: string
+}
+
 const router = express.Router()
 
 router.get("/reverse-geocode", async (req, res) => {
@@ -13,10 +26,49 @@ router.get("/reverse-geocode", async (req, res) => {
       })
     }
 
-    // Simple city mapping based on coordinates (Saudi Arabia focus)
     const latitude = Number.parseFloat(lat as string)
     const longitude = Number.parseFloat(lng as string)
 
+    // Try Google Maps Geocoding API first
+    const googleMapsApiKey = process.env.GOOGLE_MAPS_API_KEY
+    
+    if (googleMapsApiKey) {
+      try {
+        const response = await fetch(
+          `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${googleMapsApiKey}&language=ar`
+        )
+        
+        if (response.ok) {
+          const data = await response.json() as GoogleMapsGeocodingResponse
+          
+          if (data.results && data.results.length > 0) {
+            // Extract city name from Google Maps response
+            const addressComponents = data.results[0].address_components
+            let city = "غير محدد"
+            
+            // Look for administrative_area_level_1 (state/province) or locality (city)
+            for (const component of addressComponents) {
+              if (component.types.includes('administrative_area_level_1') || 
+                  component.types.includes('locality')) {
+                city = component.long_name
+                break
+              }
+            }
+            
+            return res.json({
+              success: true,
+              city,
+              coordinates: { latitude, longitude },
+              address: data.results[0].formatted_address
+            })
+          }
+        }
+      } catch (error) {
+        console.warn("Google Maps API failed, falling back to hard-coded mapping:", error)
+      }
+    }
+
+    // Fallback to hard-coded mapping for Saudi Arabia
     let city = "غير محدد"
 
     // Riyadh area

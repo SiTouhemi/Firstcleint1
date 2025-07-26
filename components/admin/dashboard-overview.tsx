@@ -21,6 +21,8 @@ interface DashboardStats {
   totalStores: number
   activeStores: number
   totalProducts: number
+  activeProducts: number
+  inactiveProducts: number
   totalOrders: number
   totalRevenue: number
   pendingOrders: number
@@ -44,6 +46,8 @@ export function DashboardOverview() {
     totalStores: 0,
     activeStores: 0,
     totalProducts: 0,
+    activeProducts: 0,
+    inactiveProducts: 0,
     totalOrders: 0,
     totalRevenue: 0,
     pendingOrders: 0,
@@ -61,9 +65,11 @@ export function DashboardOverview() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:4000'
+      
       const [statsResponse, ordersResponse] = await Promise.all([
-        fetch("/api/dashboard/stats"),
-        fetch("/api/dashboard/recent-orders"),
+        fetch(`${backendUrl}/api/dashboard/stats`),
+        fetch(`${backendUrl}/api/dashboard/recent-orders`),
       ])
 
       const statsData = await statsResponse.json()
@@ -182,9 +188,8 @@ export function DashboardOverview() {
               <div>
                 <p className="text-green-100 text-sm">إجمالي المنتجات</p>
                 <p className="text-3xl font-bold">{stats.totalProducts}</p>
-                <p className="text-green-200 text-xs mt-1 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  +12% من الشهر الماضي
+                <p className="text-green-200 text-xs mt-1">
+                  {stats.activeProducts} منتج نشط، {stats.inactiveProducts} غير نشط
                 </p>
               </div>
               <Package className="h-12 w-12 text-green-200" />
@@ -211,9 +216,8 @@ export function DashboardOverview() {
               <div>
                 <p className="text-orange-100 text-sm">إجمالي المبيعات</p>
                 <p className="text-3xl font-bold">{stats.totalRevenue.toLocaleString()} ر.س</p>
-                <p className="text-orange-200 text-xs mt-1 flex items-center gap-1">
-                  <TrendingUp className="h-3 w-3" />
-                  +15% من الشهر الماضي
+                <p className="text-orange-200 text-xs mt-1">
+                  {stats.totalOrders} طلب إجمالي
                 </p>
               </div>
               <DollarSign className="h-12 w-12 text-orange-200" />

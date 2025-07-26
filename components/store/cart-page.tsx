@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, Plus, Minus, Trash2, MapPin, X, ShoppingCart } from "lucide-react"
+import { ArrowLeft, Plus, Minus, Trash2, MapPin, X, ShoppingCart, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Card, CardContent } from "@/components/ui/card"
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { useCart } from "@/hooks/use-cart"
 import { useToast } from "@/hooks/use-toast"
+import { AdminLocationPicker } from "@/components/admin/location-picker"
 
 interface CartPageProps {
   onBack: () => void
@@ -25,6 +26,11 @@ export function CartPage({ onBack }: CartPageProps) {
     phone: "",
     address: "",
   })
+  const [promoCode, setPromoCode] = useState("")
+  const [promoDiscount, setPromoDiscount] = useState(0)
+  const [promoLoading, setPromoLoading] = useState(false)
+  const [promoError, setPromoError] = useState("")
+  const [promoSuccess, setPromoSuccess] = useState("")
 
   const handleCheckout = async () => {
     if (items.length === 0) {
@@ -63,8 +69,8 @@ export function CartPage({ onBack }: CartPageProps) {
         customer_name: customerInfo.name.trim(),
         customer_phone: customerInfo.phone.trim(),
         customer_address: customerInfo.address.trim(),
-        customer_lat: selectedLocation.lat,
-        customer_lng: selectedLocation.lng,
+        // customer_lat: selectedLocation.lat,  // Temporarily disabled - column doesn't exist
+        // customer_lng: selectedLocation.lng,  // Temporarily disabled - column doesn't exist
         items: items.map((item) => ({
           product_id: item.id,
           product_name: item.name,
@@ -72,9 +78,11 @@ export function CartPage({ onBack }: CartPageProps) {
           price: item.price,
           total: item.price * item.quantity,
         })),
-        subtotal: getTotalPrice(),
-        delivery_fee: getTotalPrice() >= 100 ? 0 : 15,
-        total: getTotalPrice() + (getTotalPrice() >= 100 ? 0 : 15),
+        subtotal: subtotal,
+        delivery_fee: deliveryFee,
+        discount_amount: promoDiscount,
+        promo_code: promoCode.trim() || null,
+        total: total,
       }
 
       const response = await fetch(`${backendUrl}/api/orders`, {
@@ -136,64 +144,55 @@ export function CartPage({ onBack }: CartPageProps) {
     }
   }
 
-  const handleMapClick = (event: React.MouseEvent<HTMLDivElement>) => {
-    const rect = event.currentTarget.getBoundingClientRect()
-    const x = event.clientX - rect.left
-    const y = event.clientY - rect.top
-    
-    // Convert click coordinates to map coordinates (simplified)
-    const lat = 24.7136 + (y - rect.height / 2) * 0.001
-    const lng = 46.6753 + (x - rect.width / 2) * 0.001
-    
-    setSelectedLocation({ lat, lng })
-  }
 
-  const confirmMapLocation = () => {
-    // Update the address field with coordinates
-    setCustomerInfo(prev => ({
-      ...prev,
-      address: `موقع محدد على الخريطة: ${selectedLocation.lat.toFixed(4)}, ${selectedLocation.lng.toFixed(4)}`
-    }))
-    setShowMap(false)
-  }
-
-  const handleCurrentLocation = async () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude
-          const lng = position.coords.longitude
-          setSelectedLocation({ lat, lng })
-          setCustomerInfo(prev => ({
-            ...prev,
-            address: `موقعي الحالي: ${lat.toFixed(4)}, ${lng.toFixed(4)}`
-          }))
-          setShowMap(false)
-          toast({
-            title: "تم تحديد موقعك",
-            description: "تم تحديد موقعك الحالي بنجاح",
-          })
-        },
-        (error) => {
-          console.error('Error getting location:', error)
-          toast({
-            title: "خطأ في تحديد الموقع",
-            description: "فشل في تحديد موقعك الحالي. يرجى تحديد الموقع يدوياً.",
-            variant: "destructive",
-          })
-        }
-      )
-    } else {
-      toast({
-        title: "متصفح غير مدعوم",
-        description: "متصفحك لا يدعم تحديد الموقع. يرجى تحديد الموقع يدوياً.",
-        variant: "destructive",
-      })
-    }
-  }
 
   const deliveryFee = getTotalPrice() >= 100 ? 0 : 15
-  const total = getTotalPrice() + deliveryFee
+  const subtotal = getTotalPrice()
+  const total = subtotal + deliveryFee - promoDiscount
+
+  const handlePromoCode = async () => {
+    if (!promoCode.trim()) {
+      setPromoError("يرجى إدخال كود الخصم")
+      return
+    }
+
+    setPromoLoading(true)
+    setPromoError("")
+    setPromoSuccess("")
+
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+      const response = await fetch(`${backendUrl}/api/promo-codes/validate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          subtotal: subtotal,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setPromoDiscount(data.discount_amount || 0)
+        setPromoSuccess(data.message || "تم تطبيق كود الخصم بنجاح")
+        toast({
+          title: "تم تطبيق كود الخصم",
+          description: `تم خصم ${data.discount_amount} ر.س من إجمالي الطلب`,
+        })
+      } else {
+        setPromoError(data.error || "كود الخصم غير صحيح")
+        setPromoDiscount(0)
+      }
+    } catch (error) {
+      setPromoError("حدث خطأ في التحقق من كود الخصم")
+      setPromoDiscount(0)
+    } finally {
+      setPromoLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -280,11 +279,21 @@ export function CartPage({ onBack }: CartPageProps) {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">عنوان التوصيل *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    عنوان التوصيل *
+                    {selectedLocation.lat !== 24.7136 || selectedLocation.lng !== 46.6753 ? (
+                      <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        ✓ موقع محدد
+                      </span>
+                    ) : null}
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    اكتب عنوانك بالتفصيل (مثل: رقم المنزل، اسم الشارع، الحي) أو اختر موقعك من الخريطة
+                  </p>
                   <div className="flex gap-2">
                     <textarea
                       className="flex-1 border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      placeholder="أدخل عنوان التوصيل بالتفصيل"
+                      placeholder="مثال: شارع الملك فهد، حي العليا، الرياض، رقم المنزل 123"
                       value={customerInfo.address}
                       onChange={(e) => setCustomerInfo((prev) => ({ ...prev, address: e.target.value }))}
                       rows={3}
@@ -303,11 +312,49 @@ export function CartPage({ onBack }: CartPageProps) {
                   </div>
                 </div>
               </div>
+              {/* Promo Code Section */}
+              <div className="mb-4 pb-4 border-b">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="كود الخصم (اختياري)"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value)}
+                    disabled={promoLoading}
+                  />
+                  <Button
+                    onClick={handlePromoCode}
+                    disabled={promoLoading || !promoCode.trim()}
+                    size="sm"
+                    className="px-4"
+                  >
+                    {promoLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      "تطبيق"
+                    )}
+                  </Button>
+                </div>
+                {promoError && (
+                  <p className="text-red-500 text-xs mt-2">{promoError}</p>
+                )}
+                {promoSuccess && (
+                  <p className="text-green-600 text-xs mt-2">{promoSuccess}</p>
+                )}
+              </div>
+
               <div className="space-y-2 mb-4">
                 <div className="summary-row flex justify-between items-center text-sm">
                   <span>المجموع الفرعي:</span>
-                  <span>{getTotalPrice().toFixed(2)} ر.س</span>
+                  <span>{subtotal.toFixed(2)} ر.س</span>
                 </div>
+                {promoDiscount > 0 && (
+                  <div className="summary-row flex justify-between items-center text-sm text-green-600">
+                    <span>خصم:</span>
+                    <span>-{promoDiscount.toFixed(2)} ر.س</span>
+                  </div>
+                )}
                 <div className="summary-row flex justify-between items-center text-sm">
                   <span>رسوم التوصيل:</span>
                   <span>{deliveryFee === 0 ? "مجاني" : `${deliveryFee.toFixed(2)} ر.س`}</span>
@@ -334,63 +381,22 @@ export function CartPage({ onBack }: CartPageProps) {
 
         {/* Map Modal */}
         <Dialog open={showMap} onOpenChange={setShowMap}>
-          <DialogContent className="max-w-md mx-auto">
-            <DialogHeader>
-              <DialogTitle className="text-center text-lg font-bold text-gray-800" style={{ fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif' }}>
-                تحديد موقع التوصيل
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold" style={{ fontFamily: 'Noto Sans Arabic, system-ui, -apple-system, sans-serif' }}>
-                  اختر موقعك على الخريطة
-                </h3>
-                <Button variant="ghost" size="icon" onClick={() => setShowMap(false)}>
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              
-              <div 
-                className="w-full h-64 bg-gradient-to-br from-blue-100 to-green-100 border-2 border-blue-300 rounded-lg relative cursor-crosshair overflow-hidden"
-                onClick={handleMapClick}
-              >
-                {/* Map Grid Lines */}
-                <div className="absolute inset-0 opacity-20">
-                  <div className="grid grid-cols-8 grid-rows-8 h-full">
-                    {Array.from({ length: 64 }).map((_, i) => (
-                      <div key={i} className="border border-gray-300"></div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Location Marker */}
-                <div 
-                  className="absolute w-6 h-6 bg-red-500 rounded-full border-2 border-white shadow-lg transform -translate-x-1/2 -translate-y-1/2"
-                  style={{
-                    left: '50%',
-                    top: '50%',
-                    transform: 'translate(-50%, -50%)'
-                  }}
-                >
-                  <div className="w-2 h-2 bg-white rounded-full absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-                </div>
-                
-                {/* Coordinates Display */}
-                <div className="absolute bottom-2 left-2 bg-white bg-opacity-90 px-2 py-1 rounded text-xs">
-                  {selectedLocation.lat.toFixed(4)}, {selectedLocation.lng.toFixed(4)}
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button onClick={handleCurrentLocation} variant="outline" className="flex-1">
-                  موقعي الحالي
-                </Button>
-                <Button onClick={confirmMapLocation} className="flex-1 bg-blue-600 hover:bg-blue-700">
-                  تأكيد الموقع
-                </Button>
-              </div>
-            </div>
+          <DialogContent className="max-w-md mx-auto p-0">
+            <AdminLocationPicker
+              onLocationSelect={(location) => {
+                setSelectedLocation({ lat: location.lat, lng: location.lng });
+                setCustomerInfo(prev => ({
+                  ...prev,
+                  address: location.address || `موقع محدد على الخريطة: ${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}`
+                }));
+                setShowMap(false);
+                toast({
+                  title: "تم تحديد الموقع",
+                  description: "تم تحديد موقع التوصيل بنجاح",
+                });
+              }}
+              initialLocation={{ lat: selectedLocation.lat, lng: selectedLocation.lng, address: customerInfo.address }}
+            />
           </DialogContent>
         </Dialog>
       </main>

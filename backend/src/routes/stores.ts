@@ -11,9 +11,12 @@ router.use((req, res, next) => {
 
 router.get("/", async (req, res) => {
   try {
-    // No filter for city by default
-    let query = supabase.from("stores").select("*").eq("is_active", true)
-    const { data: stores, error } = await query.order("name", { ascending: true })
+    let query = supabase.from("stores").select("*");
+    // Only filter for active if requested
+    if (req.query.active === "true") {
+      query = query.eq("is_active", true);
+    }
+    const { data: stores, error } = await query.order("name", { ascending: true });
     if (error) {
       console.error("Database error:", error)
       return res.status(500).json({

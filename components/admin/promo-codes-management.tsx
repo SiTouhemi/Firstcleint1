@@ -22,8 +22,8 @@ interface PromoCode {
   usage_limit?: number
   used_count: number
   is_active: boolean
-  start_date: string
-  end_date?: string
+  valid_from: string
+  valid_until?: string
   created_at: string
 }
 
@@ -42,8 +42,8 @@ export function PromoCodesManagement() {
     min_order_amount: 0,
     max_discount_amount: 0,
     usage_limit: 0,
-    start_date: "",
-    end_date: "",
+    valid_from: "",
+    valid_until: "",
   })
 
   useEffect(() => {
@@ -88,7 +88,7 @@ export function PromoCodesManagement() {
         code: formData.code.toUpperCase(),
         max_discount_amount: formData.max_discount_amount || null,
         usage_limit: formData.usage_limit || null,
-        end_date: formData.end_date || null,
+        valid_until: formData.valid_until || null,
       }
       let response, result
       if (editingCode) {
@@ -140,8 +140,8 @@ export function PromoCodesManagement() {
       min_order_amount: promoCode.min_order_amount,
       max_discount_amount: promoCode.max_discount_amount || 0,
       usage_limit: promoCode.usage_limit || 0,
-      start_date: promoCode.start_date ? promoCode.start_date.split("T")[0] : "",
-      end_date: promoCode.end_date ? promoCode.end_date.split("T")[0] : "",
+      valid_from: promoCode.valid_from ? promoCode.valid_from.split("T")[0] : "",
+      valid_until: promoCode.valid_until ? promoCode.valid_until.split("T")[0] : "",
     })
     setShowDialog(true)
   }
@@ -212,8 +212,8 @@ export function PromoCodesManagement() {
       min_order_amount: 0,
       max_discount_amount: 0,
       usage_limit: 0,
-      start_date: "",
-      end_date: "",
+      valid_from: "",
+      valid_until: "",
     })
   }
 
@@ -353,8 +353,8 @@ export function PromoCodesManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">تاريخ البداية</label>
                   <Input
                     type="date"
-                    value={formData.start_date}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, start_date: e.target.value }))}
+                    value={formData.valid_from}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, valid_from: e.target.value }))}
                     required
                   />
                 </div>
@@ -363,8 +363,8 @@ export function PromoCodesManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">تاريخ الانتهاء (اختياري)</label>
                   <Input
                     type="date"
-                    value={formData.end_date}
-                    onChange={(e) => setFormData((prev) => ({ ...prev, end_date: e.target.value }))}
+                    value={formData.valid_until}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, valid_until: e.target.value }))}
                   />
                 </div>
               </div>
@@ -454,7 +454,7 @@ export function PromoCodesManagement() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">صالح حتى:</span>
                   <span className="font-medium text-sm">
-                    {promoCode.end_date ? formatDate(promoCode.end_date) : "بلا انتهاء"}
+                    {promoCode.valid_until ? formatDate(promoCode.valid_until) : "بلا انتهاء"}
                   </span>
                 </div>
 
@@ -462,14 +462,14 @@ export function PromoCodesManagement() {
                   <div className="flex items-center gap-2">
                     <span
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        promoCode.is_active && !isExpired(promoCode.end_date)
+                        promoCode.is_active && !isExpired(promoCode.valid_until)
                           ? "bg-green-100 text-green-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
-                      {promoCode.is_active && !isExpired(promoCode.end_date) ? "نشط" : "غير نشط"}
+                      {promoCode.is_active && !isExpired(promoCode.valid_until) ? "نشط" : "غير نشط"}
                     </span>
-                    {isExpired(promoCode.end_date) && (
+                    {isExpired(promoCode.valid_until) && (
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                         منتهي الصلاحية
                       </span>
@@ -480,7 +480,7 @@ export function PromoCodesManagement() {
                     variant="outline"
                     size="sm"
                     onClick={() => toggleStatus(promoCode.id, promoCode.is_active)}
-                    disabled={isExpired(promoCode.end_date)}
+                    disabled={isExpired(promoCode.valid_until)}
                   >
                     {promoCode.is_active ? "إلغاء التفعيل" : "تفعيل"}
                   </Button>

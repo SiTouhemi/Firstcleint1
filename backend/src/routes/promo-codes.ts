@@ -87,4 +87,106 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// POST /api/promo-codes/validate - Validate a promo code
+router.post('/validate', async (req, res) => {
+  try {
+    const { code, subtotal } = req.body;
+
+    if (!code) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "كود الخصم مطلوب" 
+      });
+    }
+
+    // Get the promo code from database
+    const { data: promoCode, error } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .eq('code', code.toUpperCase())
+      .single();
+
+    if (error || !promoCode) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "كود الخصم غير صحيح" 
+      });
+    }
+
+    // Check if promo code is active
+    if (!promoCode.is_active) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "كود الخصم غير مفعل" 
+      });
+    }
+
+    // Check if promo code is within date range
+    const now = new Date();
+    const startDate = promoCode.valid_from ? new Date(promoCode.valid_from) : null;
+    const endDate = promoCode.valid_until ? new Date(promoCode.valid_until) : null;
+
+    if (startDate && now < startDate) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "كود الخصم لم يبدأ بعد" 
+      });
+    }
+
+    if (endDate && now > endDate) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "كود الخصم منتهي الصلاحية" 
+      });
+    }
+
+    // Check minimum order amount
+    if (promoCode.min_order_amount && subtotal < promoCode.min_order_amount) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `الحد الأدنى للطلب ${promoCode.min_order_amount} ر.س` 
+      });
+    }
+
+    // Check usage limit
+    if (promoCode.usage_limit && promoCode.used_count >= promoCode.usage_limit) {
+      return res.status(400).json({ 
+        success: false, 
+        error: "كود الخصم استنفذ عدد مرات الاستخدام" 
+      });
+    }
+
+    // Calculate discount
+    let discountAmount = 0;
+    if (promoCode.discount_type === 'percentage') {
+      discountAmount = (subtotal * promoCode.discount_value) / 100;
+      // Apply max discount limit if set
+      if (promoCode.max_discount_amount && discountAmount > promoCode.max_discount_amount) {
+        discountAmount = promoCode.max_discount_amount;
+      }
+    } else if (promoCode.discount_type === 'fixed') {
+      discountAmount = promoCode.discount_value;
+    }
+
+    // Ensure discount doesn't exceed subtotal
+    if (discountAmount > subtotal) {
+      discountAmount = subtotal;
+    }
+
+    return res.json({
+      success: true,
+      discount_amount: discountAmount,
+      message: `تم تطبيق الخصم بنجاح: ${discountAmount.toFixed(2)} ر.س`,
+      promo_code: promoCode
+    });
+
+  } catch (err) {
+    console.error('Promo code validation error:', err);
+    res.status(500).json({ 
+      success: false, 
+      error: "حدث خطأ في التحقق من كود الخصم" 
+    });
+  }
+});
+
 export default router; 

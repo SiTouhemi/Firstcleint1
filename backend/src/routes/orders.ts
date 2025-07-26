@@ -32,18 +32,18 @@ router.post("/", async (req, res) => {
       customer_name,
       customer_phone,
       customer_address,
-      items: JSON.stringify(items),
+      // items: JSON.stringify(items),  // Temporarily disabled - column doesn't exist
       subtotal: subtotal || 0,
       delivery_fee: delivery_fee || 0,
       total: total || subtotal || 0,
       status: "pending",
     }
 
-    // Add location coordinates if provided
-    if (customer_lat !== undefined && customer_lng !== undefined) {
-      orderData.customer_lat = customer_lat
-      orderData.customer_lng = customer_lng
-    }
+    // Add location coordinates if provided (disabled - columns don't exist in database)
+    // if (customer_lat !== undefined && customer_lng !== undefined) {
+    //   orderData.customer_lat = customer_lat
+    //   orderData.customer_lng = customer_lng
+    // }
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
@@ -58,6 +58,44 @@ router.post("/", async (req, res) => {
         error: "حدث خطأ أثناء إنشاء الطلب. يرجى المحاولة مرة أخرى.",
         details: orderError.message || orderError
       })
+    }
+
+    // Create notification for new order
+    try {
+      const notificationData = {
+        type: "new_order",
+        title: "طلب جديد",
+        message: `طلب جديد من ${customer_name} - ${customer_phone}`,
+        data: {
+          order_id: order.id,
+          order_number: order.order_number,
+          customer_name,
+          customer_phone,
+          total: total
+        }
+      }
+
+      // Create notification in database
+      const { data: notification, error: notificationError } = await supabase
+        .from("notifications")
+        .insert({
+          type: notificationData.type,
+          title: notificationData.title,
+          message: notificationData.message,
+          data: JSON.stringify(notificationData.data),
+          is_read: false
+        })
+        .select()
+        .single()
+
+      if (notificationError) {
+        console.error("Error creating notification:", notificationError)
+      } else {
+        console.log("Notification created:", notification)
+      }
+    } catch (error) {
+      console.error("Error creating notification:", error)
+      // Don't fail the order creation if notification fails
     }
 
     res.json({

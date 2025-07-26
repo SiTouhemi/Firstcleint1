@@ -11,16 +11,13 @@ import ordersRouter from "./routes/orders"
 import geocodeRouter from "./routes/geocode"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcryptjs"
-import { createClient } from "@supabase/supabase-js"
+import { supabase } from "./config/database"
 import citiesRouter from "./routes/cities"
 import promoCodesRouter from "./routes/promo-codes"
+import dashboardRouter from "./routes/dashboard"
+import notificationsRouter from "./routes/notifications"
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") })
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -60,6 +57,8 @@ app.use("/api/orders", ordersRouter)
 app.use("/api", geocodeRouter)
 app.use("/api/cities", citiesRouter)
 app.use("/api/promo-codes", promoCodesRouter)
+app.use("/api/dashboard", dashboardRouter)
+app.use("/api/notifications", notificationsRouter)
 
 // Admin login endpoint
 app.post("/api/admin/login", async (req, res) => {

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Search, ShoppingCart, MapPin, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,6 +31,11 @@ const cities = [
 export function Header({ onSearch, cartItemsCount, onCartClick, selectedCity, onCityChange }: HeaderProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [showSearch, setShowSearch] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,11 +54,11 @@ export function Header({ onSearch, cartItemsCount, onCartClick, selectedCity, on
             </Button>
             <Button variant="ghost" size="icon" className="relative" onClick={onCartClick}>
               <ShoppingCart className="h-5 w-5" />
-              {cartItemsCount > 0 && (
+              {mounted && cartItemsCount > 0 ? (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {cartItemsCount}
                 </span>
-              )}
+              ) : null}
             </Button>
           </div>
           <div className="flex items-center gap-2">

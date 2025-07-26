@@ -108,15 +108,20 @@ router.get("/", async (req, res) => {
       const userLat = Number.parseFloat(latitude as string)
       const userLng = Number.parseFloat(longitude as string)
 
+      console.log(`Filtering products by location: User at ${userLat}, ${userLng}`)
+
       processedProducts = processedProducts
         .filter((product) => {
           if (!product.store?.location_lat || !product.store?.location_lng) {
+            console.log(`Product ${product.name} has no store location data`)
             return false
           }
 
           const distance = calculateDistance(userLat, userLng, product.store.location_lat, product.store.location_lng)
-
           const deliveryRadius = product.store.delivery_range || 10
+
+          console.log(`Store ${product.store.name}: ${distance}km away, delivery range: ${deliveryRadius}km`)
+
           return distance <= deliveryRadius
         })
         .map((product) => ({
@@ -126,6 +131,8 @@ router.get("/", async (req, res) => {
           category_name: product.categories?.name,
         }))
         .sort((a, b) => (a.distance || 0) - (b.distance || 0))
+
+      console.log(`Found ${processedProducts.length} products within delivery range`)
     } else {
       processedProducts = processedProducts.map((product) => ({
         ...product,

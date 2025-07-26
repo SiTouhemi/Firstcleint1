@@ -68,6 +68,14 @@ export function ProductGrid({ products, loading }: ProductGridProps) {
               <h3 className="product-name text-[13px] md:text-[15px] font-semibold text-gray-900 mb-1 leading-tight line-clamp-2 truncate">{product.name}</h3>
               {product.description && <p className="product-description text-[11px] md:text-[13px] text-gray-600 mb-2 leading-tight line-clamp-2 truncate">{product.description}</p>}
               <div className="product-price text-[14px] md:text-[16px] font-bold text-blue-600 mb-2 truncate">{product.price} {product.unit && <span className="text-[12px] md:text-[14px]">ر.س/{product.unit}</span>}</div>
+              {product.distance !== undefined && (
+                <div className="text-[11px] md:text-[12px] text-gray-500 mb-2 flex items-center gap-1">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-gray-400">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" stroke="currentColor" strokeWidth="1.5"/>
+                  </svg>
+                  {product.distance} كم
+                </div>
+              )}
               {product.available === false || (product.stock_quantity !== undefined && product.stock_quantity <= 0) ? (
                 <div className="text-xs text-red-500 font-semibold text-center py-2">المنتج غير متوفر حالياً</div>
               ) : (

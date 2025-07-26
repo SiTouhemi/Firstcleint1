@@ -1,49 +1,19 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabase } from "@/backend/src/config/database"
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { data: store, error } = await supabase
-      .from("stores")
-      .select(`
-        id,
-        name,
-        slug,
-        description,
-        email,
-        phone,
-        whatsapp,
-        website,
-        address,
-        location_lat,
-        location_lng,
-        delivery_range,
-        delivery_fee,
-        min_order_amount,
-        logo_url,
-        cover_image_url,
-        theme_color,
-        is_active,
-        is_featured,
-        opening_hours,
-        social_media,
-        created_at,
-        updated_at
-      `)
-      .eq("id", params.id)
-      .single()
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        return NextResponse.json({ success: false, error: "Store not found" }, { status: 404 })
-      }
-      console.error("Database error:", error)
-      throw error
+    if (!backendUrl) {
+      return NextResponse.json({ success: false, error: "Backend URL not configured" }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, data: store })
+    const url = `${backendUrl}/api/stores/${params.id}`
+    const response = await fetch(url)
+    const data = await response.json()
+    return NextResponse.json(data, { status: response.status })
   } catch (error) {
-    console.error("Error fetching store:", error)
+    console.error("Error proxying store request:", error)
     return NextResponse.json({ success: false, error: "Failed to fetch store" }, { status: 500 })
   }
 }

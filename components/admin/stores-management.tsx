@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Plus, Edit, Trash2, StoreIcon, MapPin, Phone, Mail, Globe, Eye, BarChart3, Search } from "lucide-react"
+import { Plus, Edit, Trash2, StoreIcon, MapPin, Phone, Mail, Globe, Eye, BarChart3, Search, Navigation, Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -11,9 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import dynamic from 'next/dynamic';
-
-const LeafletMapPicker = dynamic(() => import('./leaflet-map-picker'), { ssr: false });
+import { AdminLocationPicker } from "./location-picker"
 
 interface Store {
   id: string
@@ -516,7 +514,7 @@ export function StoresManagement() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     موقع المتجر <span className="text-red-500">*</span>
                   </label>
-                  <LeafletMapPicker
+                  <AdminLocationPicker
                     onLocationSelect={handleLocationSelect}
                     initialLocation={
                       formData.location_lat && formData.location_lng

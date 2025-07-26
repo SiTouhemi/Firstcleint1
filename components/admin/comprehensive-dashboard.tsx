@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AdminSidebar } from "./sidebar"
+import { Sidebar } from "./sidebar"
 import { DashboardOverview } from "./dashboard-overview"
 import { StoreSettings } from "./store-settings"
 import { CategoriesManagement } from "./categories-management"
@@ -51,7 +51,7 @@ export function ComprehensiveDashboard({ onLogout }: AdminDashboardProps) {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} onLogout={onLogout} />
+      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} onLogout={onLogout} />
 
       <main className="flex-1 p-6 mr-64">
         <div className="flex justify-between items-center mb-6">

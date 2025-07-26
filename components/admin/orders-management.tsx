@@ -1,12 +1,25 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { ShoppingCart, Eye, Filter } from "lucide-react"
+import { ShoppingCart, Eye, Filter, CheckCircle, Clock, Truck, XCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+interface Order {
+  id: string;
+  order_number?: string;
+  created_at?: string;
+  status: string;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_address?: string;
+  customer_lat?: number;
+  customer_lng?: number;
+  total?: number;
+}
+
 export function OrdersManagement() {
-  const [orders, setOrders] = useState([])
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState("all")
 
@@ -31,7 +44,7 @@ export function OrdersManagement() {
     }
   }
 
-  const handleStatusChange = async (orderId, newStatus) => {
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
     try {
       const response = await fetch("/api/orders", {
         method: "PATCH",
@@ -83,6 +96,23 @@ export function OrdersManagement() {
     }
   }
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Clock className="h-4 w-4" />;
+      case "processing":
+        return <Loader2 className="h-4 w-4 animate-spin" />;
+      case "shipped":
+        return <Truck className="h-4 w-4" />;
+      case "delivered":
+        return <CheckCircle className="h-4 w-4" />;
+      case "cancelled":
+        return <XCircle className="h-4 w-4" />;
+      default:
+        return <Clock className="h-4 w-4" />;
+    }
+  };
+
   const filteredOrders = orders.filter((order) => statusFilter === "all" || order.status === statusFilter)
 
   return (
@@ -127,85 +157,101 @@ export function OrdersManagement() {
         </div>
       </div>
 
-      {/* Orders List */}
-      <div className="space-y-4">
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-2 text-gray-600">جاري التحميل...</p>
-          </div>
-        ) : filteredOrders.map((order) => (
-          <Card key={order.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex flex-col gap-3">
-                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">طلب #{order.order_number || order.id}</CardTitle>
-                    <p className="text-sm text-gray-600">
-                      {order.created_at ? new Date(order.created_at).toLocaleDateString("ar-SA") : "-"}
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                      {getStatusText(order.status)}
-                    </span>
-                  </div>
-                </div>
-                
-                {/* Mobile-optimized action buttons */}
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="flex-1">
-                    <select
-                      value={order.status}
-                      onChange={e => handleStatusChange(order.id, e.target.value)}
-                      className="w-full border rounded px-3 py-2 text-sm bg-white"
-                    >
-                      <option value="pending">في الانتظار</option>
-                      <option value="processing">قيد المعالجة</option>
-                      <option value="shipped">تم الشحن</option>
-                      <option value="delivered">تم التسليم</option>
-                      <option value="cancelled">ملغي</option>
-                    </select>
-                  </div>
-                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                    <Eye className="h-4 w-4" />
-                    <span className="text-sm">عرض التفاصيل</span>
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 gap-4">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">معلومات العميل</h4>
-                    <div className="space-y-1">
-                      <p className="text-sm text-gray-600">{order.customer_name}</p>
-                      <p className="text-sm text-gray-600">{order.customer_phone}</p>
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-2">عنوان التوصيل</h4>
-                    <p className="text-sm text-gray-600 break-words">{order.customer_address}</p>
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t">
-                  <span className="font-medium text-gray-900">المجموع الكلي:</span>
-                  <span className="text-lg font-bold text-blue-600">{order.total} ر.س</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Orders Table */}
+      <div className="overflow-x-auto rounded-lg shadow">
+        <table className="min-w-full bg-white">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="px-4 py-2 text-right">رقم الطلب</th>
+              <th className="px-4 py-2 text-right">التاريخ</th>
+              <th className="px-4 py-2 text-right">الحالة</th>
+              <th className="px-4 py-2 text-right">العميل</th>
+              <th className="px-4 py-2 text-right">المجموع</th>
+              <th className="px-4 py-2 text-right">الموقع</th>
+              <th className="px-4 py-2 text-right">الموقع على الخريطة</th>
+              <th className="px-4 py-2 text-right">إجراءات</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="text-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-2 text-gray-600">جاري التحميل...</p>
+                </td>
+              </tr>
+            ) : filteredOrders.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="text-center py-8">
+                  <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">لا توجد طلبات</h3>
+                  <p className="text-gray-600">لا توجد طلبات تطابق الفلتر المحدد</p>
+                </td>
+              </tr>
+            ) : (
+              filteredOrders.map((order) => {
+                // Try to get coordinates if available, else use address
+                let mapUrl = "";
+                if (order.customer_lat && order.customer_lng) {
+                  mapUrl = `https://www.google.com/maps?q=${order.customer_lat},${order.customer_lng}`;
+                } else if (order.customer_address) {
+                  mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.customer_address)}`;
+                }
+                return (
+                  <tr key={order.id} className="border-b hover:bg-gray-50">
+                    <td className="px-4 py-2 font-bold">#{order.order_number || order.id}</td>
+                    <td className="px-4 py-2">{order.created_at ? new Date(order.created_at).toLocaleDateString("ar-SA") : "-"}</td>
+                    <td className="px-4 py-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                        {getStatusText(order.status)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2">{order.customer_name}</td>
+                    <td className="px-4 py-2 font-bold text-blue-600">{order.total} ر.س</td>
+                    <td className="px-4 py-2">
+                      <div className="max-w-xs">
+                        <p className="text-sm text-gray-900 break-words">
+                          {order.customer_address || "غير محدد"}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">
+                      {mapUrl ? (
+                        <a
+                          href={mapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline text-xs"
+                        >
+                          عرض على الخريطة
+                        </a>
+                      ) : (
+                        <span className="text-gray-400 text-xs">غير متوفر</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2 flex gap-2 items-center">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 ${getStatusColor(order.status)}`}>
+                        {getStatusIcon(order.status)}
+                        {getStatusText(order.status)}
+                      </span>
+                      <select
+                        value={order.status}
+                        onChange={e => handleStatusChange(order.id, e.target.value)}
+                        className={`border rounded px-2 py-1 text-xs focus:outline-none ${getStatusColor(order.status)}`}
+                        style={{ minWidth: 110 }}
+                      >
+                        <option value="pending">في الانتظار</option>
+                        <option value="delivered">تم التسليم</option>
+                        <option value="cancelled">ملغي</option>
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
-
-      {filteredOrders.length === 0 && !loading && (
-        <div className="text-center py-12">
-          <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">لا توجد طلبات</h3>
-          <p className="text-gray-600">لا توجد طلبات تطابق الفلتر المحدد</p>
-        </div>
-      )}
     </div>
   )
 }

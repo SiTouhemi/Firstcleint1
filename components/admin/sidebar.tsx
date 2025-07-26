@@ -21,9 +21,10 @@ import { cn } from "@/lib/utils"
 interface SidebarProps {
   activeTab: string
   onTabChange: (tab: string) => void
+  onLogout?: () => void
 }
 
-export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
+export function Sidebar({ activeTab, onTabChange, onLogout }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isMobileOpen, setIsMobileOpen] = useState(false)
 
@@ -190,10 +191,14 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
               variant="outline"
               className="w-full flex items-center justify-center gap-2 text-red-600 hover:text-white hover:bg-red-600 transition-all"
               onClick={() => {
-                // Clear admin token and redirect to login (customize as needed)
-                if (typeof window !== 'undefined') {
-                  document.cookie = 'admin_token=; Max-Age=0; path=/;';
-                  window.location.href = '/admin/login';
+                if (onLogout) {
+                  onLogout();
+                } else {
+                  // Fallback logout functionality
+                  if (typeof window !== 'undefined') {
+                    document.cookie = 'admin_token=; Max-Age=0; path=/;';
+                    window.location.href = '/admin/login';
+                  }
                 }
               }}
             >

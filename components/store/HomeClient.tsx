@@ -32,6 +32,7 @@ export function HomeClient({ banners }: HomeClientProps) {
   const [selectedCity, setSelectedCity] = useState<string>("")
   const [nearbyOnly, setNearbyOnly] = useState(false)
   const [cities, setCities] = useState<string[]>([])
+  const [hasInitialLoad, setHasInitialLoad] = useState(false)
 
   const { getTotalItems } = useCart()
   const { location, requestLocation } = useLocation()
@@ -98,6 +99,10 @@ export function HomeClient({ banners }: HomeClientProps) {
           params.append("latitude", location.latitude.toString())
           params.append("longitude", location.longitude.toString())
           params.append("nearbyOnly", "true")
+        } else if (nearbyOnly && !location) {
+          // Don't fetch with nearbyOnly if location is not available yet
+          setLoading(false)
+          return
         }
         // Add cache-busting param
         params.append("t", Date.now().toString())
@@ -114,16 +119,52 @@ export function HomeClient({ banners }: HomeClientProps) {
         setProducts([])
       } finally {
         setLoading(false)
+        setHasInitialLoad(true)
       }
     }
-    fetchProducts()
-  }, [selectedCategory, selectedSubcategory, searchQuery, selectedCity, nearbyOnly, location])
+    
+    // Only fetch products if we have a selected category or if it's the initial load
+    if (selectedCategory || (!selectedCategory && categories.length > 0)) {
+      fetchProducts()
+    }
+  }, [selectedCategory, selectedSubcategory, searchQuery, selectedCity, nearbyOnly, categories.length])
 
   useEffect(() => {
     if (nearbyOnly && !location) {
       requestLocation()
     }
   }, [nearbyOnly, location, requestLocation])
+
+  // Separate effect to handle location changes after initial load
+  useEffect(() => {
+    if (hasInitialLoad && location && nearbyOnly) {
+      // Refetch products when location changes and nearbyOnly is enabled
+      const fetchProducts = async () => {
+        try {
+          const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL
+          const params = new URLSearchParams()
+          if (selectedCategory) params.append("category", selectedCategory)
+          if (selectedSubcategory) params.append("subcategory", selectedSubcategory)
+          if (searchQuery) params.append("search", searchQuery)
+          if (selectedCity) params.append("city", selectedCity)
+          if (nearbyOnly && location) {
+            params.append("latitude", location.latitude.toString())
+            params.append("longitude", location.longitude.toString())
+            params.append("nearbyOnly", "true")
+          }
+          params.append("t", Date.now().toString())
+          const response = await fetch(`${backendUrl}/api/products?${params.toString()}`, { cache: 'no-store' })
+          if (response.ok) {
+            const data = await response.json()
+            setProducts(data.success ? data.data : [])
+          }
+        } catch (error) {
+          console.error("Error fetching products with location:", error)
+        }
+      }
+      fetchProducts()
+    }
+  }, [location, hasInitialLoad, nearbyOnly, selectedCategory, selectedSubcategory, searchQuery, selectedCity])
 
   const handleCategorySelect = (categoryId: string) => {
     setSelectedCategory(categoryId)

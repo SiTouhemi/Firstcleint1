@@ -29,6 +29,8 @@ export interface Category {
   background?: string // new optional property for background color/gradient
   is_active: boolean
   sort_order: number
+  parent_id?: string
+  store_id?: string
   created_at?: string
   updated_at?: string
   subcategories?: Category[]

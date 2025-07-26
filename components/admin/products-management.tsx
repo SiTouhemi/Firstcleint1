@@ -18,6 +18,7 @@ export function ProductsManagement() {
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [showInactive, setShowInactive] = useState(false)
   const { toast } = useToast()
   const [formData, setFormData] = useState({
     name: "",
@@ -173,9 +174,18 @@ export function ProductsManagement() {
   }
 
   const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (product.category?.name || "").toLowerCase().includes(searchTerm.toLowerCase()),
+    (product) => {
+      // First filter by search term
+      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.category?.name || "").toLowerCase().includes(searchTerm.toLowerCase())
+      
+      // Then filter by active/inactive state
+      if (!showInactive) {
+        return matchesSearch && product.is_active === true
+      }
+      
+      return matchesSearch
+    }
   )
 
   if (loading) {
@@ -222,15 +232,25 @@ export function ProductsManagement() {
         </Button>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="البحث في المنتجات..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pr-10"
-        />
+      {/* Search and Toggle */}
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+        <div className="relative max-w-md">
+          <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="البحث في المنتجات..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pr-10"
+          />
+        </div>
+        
+        <Button
+          variant={showInactive ? "default" : "outline"}
+          onClick={() => setShowInactive(!showInactive)}
+          className="flex items-center gap-2"
+        >
+          {showInactive ? "إخفاء المنتجات غير النشطة" : "إظهار المنتجات غير النشطة"}
+        </Button>
       </div>
 
       {/* Products Grid */}
@@ -239,7 +259,16 @@ export function ProductsManagement() {
           <Card key={product.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
               <div className="flex justify-between items-start">
-                <CardTitle className="text-lg line-clamp-1">{product.name}</CardTitle>
+                <div className="flex-1">
+                  <CardTitle className={`text-lg line-clamp-1 ${!product.is_active ? 'text-gray-500' : ''}`}>
+                    {product.name}
+                  </CardTitle>
+                  {!product.is_active && (
+                    <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full mt-1 inline-block">
+                      غير نشط
+                    </span>
+                  )}
+                </div>
                 <div className="flex gap-1">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(product)}>
                     <Edit className="h-4 w-4" />
@@ -367,14 +396,17 @@ export function ProductsManagement() {
               )}
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">نشط</label>
+            <div className="flex items-center space-x-2 space-x-reverse">
               <input
                 type="checkbox"
+                id="is_active"
                 checked={formData.is_active}
                 onChange={e => setFormData(f => ({ ...f, is_active: e.target.checked }))}
-                className="h-5 w-5"
+                className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
+              <label htmlFor="is_active" className="block text-sm font-medium text-gray-700">
+                المنتج نشط ومتاح للعملاء
+              </label>
             </div>
 
             <div className="flex gap-3 pt-4">

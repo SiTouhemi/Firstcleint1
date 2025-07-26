@@ -5,7 +5,7 @@ const router = express.Router()
 
 router.post("/", async (req, res) => {
   try {
-    const { customer_name, customer_phone, customer_address, items, subtotal, delivery_fee, total } = req.body
+    const { customer_name, customer_phone, customer_address, customer_lat, customer_lng, items, subtotal, delivery_fee, total } = req.body
 
     // Validate required fields
     if (
@@ -26,20 +26,28 @@ router.post("/", async (req, res) => {
     // Generate order number
     const orderNumber = `ORD-${Date.now().toString().slice(-8)}`
 
-    // Create order
+    // Create order with location data
+    const orderData: any = {
+      order_number: orderNumber,
+      customer_name,
+      customer_phone,
+      customer_address,
+      items: JSON.stringify(items),
+      subtotal: subtotal || 0,
+      delivery_fee: delivery_fee || 0,
+      total: total || subtotal || 0,
+      status: "pending",
+    }
+
+    // Add location coordinates if provided
+    if (customer_lat !== undefined && customer_lng !== undefined) {
+      orderData.customer_lat = customer_lat
+      orderData.customer_lng = customer_lng
+    }
+
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .insert({
-        order_number: orderNumber,
-        customer_name,
-        customer_phone,
-        customer_address,
-        items: JSON.stringify(items),
-        subtotal: subtotal || 0,
-        delivery_fee: delivery_fee || 0,
-        total: total || subtotal || 0,
-        status: "pending",
-      })
+      .insert(orderData)
       .select()
       .single()
 

@@ -87,7 +87,8 @@ export function OrdersManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <ShoppingCart className="h-6 w-6" />
@@ -97,76 +98,95 @@ export function OrdersManagement() {
         </div>
       </div>
 
-      {/* Status Filter */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        <Button
-          variant={statusFilter === "all" ? "default" : "outline"}
-          size="sm"
-          onClick={() => setStatusFilter("all")}
-          className="whitespace-nowrap"
-        >
-          <Filter className="h-4 w-4 mr-1" />
-          الكل
-        </Button>
-        {["pending", "processing", "shipped", "delivered", "cancelled"].map((status) => (
+      {/* Status Filter - Mobile Optimized */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-gray-500" />
+          <span className="text-sm font-medium text-gray-700">فلتر الحالة:</span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap gap-2">
           <Button
-            key={status}
-            variant={statusFilter === status ? "default" : "outline"}
+            variant={statusFilter === "all" ? "default" : "outline"}
             size="sm"
-            onClick={() => setStatusFilter(status)}
-            className="whitespace-nowrap"
+            onClick={() => setStatusFilter("all")}
+            className="whitespace-nowrap text-xs sm:text-sm"
           >
-            {getStatusText(status)}
+            الكل
           </Button>
-        ))}
+          {["pending", "processing", "shipped", "delivered", "cancelled"].map((status) => (
+            <Button
+              key={status}
+              variant={statusFilter === status ? "default" : "outline"}
+              size="sm"
+              onClick={() => setStatusFilter(status)}
+              className="whitespace-nowrap text-xs sm:text-sm"
+            >
+              {getStatusText(status)}
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Orders List */}
       <div className="space-y-4">
         {loading ? (
-          <div className="text-center py-12">جاري التحميل...</div>
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">جاري التحميل...</p>
+          </div>
         ) : filteredOrders.map((order) => (
           <Card key={order.id} className="hover:shadow-lg transition-shadow">
             <CardHeader className="pb-3">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-lg">طلب #{order.order_number || order.id}</CardTitle>
-                  <p className="text-sm text-gray-600">
-                    {order.created_at ? new Date(order.created_at).toLocaleDateString("ar-SA") : "-"}
-                  </p>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
+                  <div className="flex-1">
+                    <CardTitle className="text-lg">طلب #{order.order_number || order.id}</CardTitle>
+                    <p className="text-sm text-gray-600">
+                      {order.created_at ? new Date(order.created_at).toLocaleDateString("ar-SA") : "-"}
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                      {getStatusText(order.status)}
+                    </span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                    {getStatusText(order.status)}
-                  </span>
-                  <select
-                    value={order.status}
-                    onChange={e => handleStatusChange(order.id, e.target.value)}
-                    className="ml-2 border rounded px-2 py-1 text-xs"
-                  >
-                    <option value="pending">في الانتظار</option>
-                    <option value="processing">قيد المعالجة</option>
-                    <option value="shipped">تم الشحن</option>
-                    <option value="delivered">تم التسليم</option>
-                    <option value="cancelled">ملغي</option>
-                  </select>
-                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                
+                {/* Mobile-optimized action buttons */}
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1">
+                    <select
+                      value={order.status}
+                      onChange={e => handleStatusChange(order.id, e.target.value)}
+                      className="w-full border rounded px-3 py-2 text-sm bg-white"
+                    >
+                      <option value="pending">في الانتظار</option>
+                      <option value="processing">قيد المعالجة</option>
+                      <option value="shipped">تم الشحن</option>
+                      <option value="delivered">تم التسليم</option>
+                      <option value="cancelled">ملغي</option>
+                    </select>
+                  </div>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
                     <Eye className="h-4 w-4" />
+                    <span className="text-sm">عرض التفاصيل</span>
                   </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-1">معلومات العميل</h4>
-                    <p className="text-sm text-gray-600">{order.customer_name}</p>
-                    <p className="text-sm text-gray-600">{order.customer_phone}</p>
+                    <h4 className="font-medium text-gray-900 mb-2">معلومات العميل</h4>
+                    <div className="space-y-1">
+                      <p className="text-sm text-gray-600">{order.customer_name}</p>
+                      <p className="text-sm text-gray-600">{order.customer_phone}</p>
+                    </div>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 mb-1">عنوان التوصيل</h4>
-                    <p className="text-sm text-gray-600">{order.customer_address}</p>
+                    <h4 className="font-medium text-gray-900 mb-2">عنوان التوصيل</h4>
+                    <p className="text-sm text-gray-600 break-words">{order.customer_address}</p>
                   </div>
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t">
@@ -179,7 +199,7 @@ export function OrdersManagement() {
         ))}
       </div>
 
-      {filteredOrders.length === 0 && (
+      {filteredOrders.length === 0 && !loading && (
         <div className="text-center py-12">
           <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">لا توجد طلبات</h3>

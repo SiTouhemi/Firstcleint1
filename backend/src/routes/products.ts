@@ -17,7 +17,8 @@ router.get("/", async (req, res) => {
         subcategory:categories!products_subcategory_id_fkey(name),
         store:stores!inner(id, name, slug, city_id, location_lat, location_lng, delivery_range)
       `)
-      .eq("is_active", true)
+    
+    // Removed backend filtering - all filtering handled on frontend
 
     // Apply category filter
     if (category) {
@@ -88,6 +89,11 @@ router.get("/", async (req, res) => {
         success: false,
         error: "Failed to fetch products",
       })
+    }
+
+    console.log("Products returned:", products?.length || 0)
+    if (products && products.length > 0) {
+      console.log("Sample product is_active:", products[0].is_active)
     }
 
     if (!products || products.length === 0) {

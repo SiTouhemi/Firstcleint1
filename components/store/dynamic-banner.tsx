@@ -94,9 +94,12 @@ export function DynamicBanner({ pcMode = false }: DynamicBannerProps) {
         <div className="absolute top-[-30px] right-[-30px] w-[90px] h-[90px] bg-white/10 rounded-full z-0" />
         {/* Badge */}
         {banner.badge_text && (
-          <div className="flex-shrink-0 ml-2 rtl:ml-0 rtl:mr-2 z-10">
+          <div className="flex-shrink-0 ml-2 rtl:ml-0 rtl:mr-2 z-10" style={{ transform: 'translateX(15px)' }}>
             <div
-              className="bg-yellow-400 text-black font-bold text-lg w-12 h-12 rounded-full flex items-center justify-center shadow-md border-2 border-white"
+              className="bg-yellow-400 text-black font-bold text-lg w-14 h-14 rounded-full flex items-center justify-center shadow-md border-2 border-white"
+              style={{
+                animation: 'pulse-grow 2s ease-in-out infinite'
+              }}
               aria-label={banner.badge_text}
             >
               {banner.badge_text}

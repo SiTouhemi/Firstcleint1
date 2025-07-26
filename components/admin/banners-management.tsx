@@ -510,7 +510,11 @@ export function BannersManagement() {
                     className="h-8 w-8"
                     onClick={() => toggleStatus(banner.id, banner.is_active)}
                   >
-                    {banner.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      banner.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                    }`}>
+                      {banner.is_active ? "نشط" : "غير نشط"}
+                    </span>
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(banner)}>
                     <Edit className="h-4 w-4" />

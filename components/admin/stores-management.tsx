@@ -300,25 +300,25 @@ export function StoresManagement() {
   return (
     <div className="space-y-6" dir="rtl">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
-              <StoreIcon className="h-8 w-8 text-blue-600" />
+              <StoreIcon className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
             </div>
             إدارة المتاجر
           </h1>
           <p className="text-gray-600 mt-2">إنشاء وإدارة المتاجر الإلكترونية وفروعها</p>
         </div>
 
-        <div className="flex gap-3">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <Input
               placeholder="البحث في المتاجر..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pr-10 w-64"
+              className="pr-10 w-full"
             />
           </div>
 
@@ -329,14 +329,14 @@ export function StoresManagement() {
                   setEditingStore(null)
                   resetForm()
                 }}
-                className="flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700"
+                className="flex items-center gap-2 px-4 sm:px-6 py-3 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
                 size="lg"
               >
                 <Plus className="h-5 w-5" />
-                إضافة متجر جديد
+                <span className="text-sm sm:text-base">إضافة متجر جديد</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-auto">
               <DialogHeader>
                 <DialogTitle className="text-xl text-right">
                   {editingStore ? "تعديل المتجر" : "إضافة متجر جديد"}
@@ -344,7 +344,7 @@ export function StoresManagement() {
               </DialogHeader>
 
               <form onSubmit={handleSubmit} className="space-y-6" dir="rtl">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       اسم المتجر <span className="text-red-500">*</span>
@@ -370,7 +370,7 @@ export function StoresManagement() {
                     />
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">المدينة <span className="text-red-500">*</span></label>
                     <select
@@ -406,7 +406,7 @@ export function StoresManagement() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">البريد الإلكتروني</label>
                     <Input
@@ -430,7 +430,7 @@ export function StoresManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">رقم الواتساب</label>
                     <Input
@@ -454,7 +454,7 @@ export function StoresManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       نطاق التوصيل (كم) <span className="text-red-500">*</span>
@@ -501,7 +501,7 @@ export function StoresManagement() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">خط العرض (Latitude)</label>
                     <Input value={formData.location_lat} readOnly className="h-12" />
@@ -530,7 +530,7 @@ export function StoresManagement() {
                   />
                 </div>
 
-                <div className="flex gap-3 pt-6 border-t">
+                <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
                   <Button
                     type="button"
                     variant="outline"
@@ -550,64 +550,64 @@ export function StoresManagement() {
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {/* Statistics Cards - Mobile Optimized */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100">إجمالي المتاجر</p>
-                <p className="text-3xl font-bold">{stores.length}</p>
+                <p className="text-blue-100 text-sm sm:text-base">إجمالي المتاجر</p>
+                <p className="text-2xl sm:text-3xl font-bold">{stores.length}</p>
               </div>
-              <StoreIcon className="h-12 w-12 text-blue-200" />
+              <StoreIcon className="h-8 w-8 sm:h-12 sm:w-12 text-blue-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100">المتاجر النشطة</p>
-                <p className="text-3xl font-bold">{stores.filter((s) => s.is_active).length}</p>
+                <p className="text-green-100 text-sm sm:text-base">المتاجر النشطة</p>
+                <p className="text-2xl sm:text-3xl font-bold">{stores.filter((s) => s.is_active).length}</p>
               </div>
-              <Eye className="h-12 w-12 text-green-200" />
+              <Eye className="h-8 w-8 sm:h-12 sm:w-12 text-green-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100">المتاجر المميزة</p>
-                <p className="text-3xl font-bold">{stores.filter((s) => s.is_featured).length}</p>
+                <p className="text-purple-100 text-sm sm:text-base">المتاجر المميزة</p>
+                <p className="text-2xl sm:text-3xl font-bold">{stores.filter((s) => s.is_featured).length}</p>
               </div>
-              <BarChart3 className="h-12 w-12 text-purple-200" />
+              <BarChart3 className="h-8 w-8 sm:h-12 sm:w-12 text-purple-200" />
             </div>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100">متوسط نطاق التوصيل</p>
-                <p className="text-3xl font-bold">
+                <p className="text-orange-100 text-sm sm:text-base">متوسط نطاق التوصيل</p>
+                <p className="text-2xl sm:text-3xl font-bold">
                   {stores.length > 0
                     ? Math.round(stores.reduce((sum, s) => sum + s.delivery_range, 0) / stores.length)
                     : 0}{" "}
                   كم
                 </p>
               </div>
-              <MapPin className="h-12 w-12 text-orange-200" />
+              <MapPin className="h-8 w-8 sm:h-12 sm:w-12 text-orange-200" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Stores Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      {/* Stores Grid - Mobile Optimized */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
         {filteredStores.map((store) => (
           <Card
             key={store.id}
@@ -615,13 +615,13 @@ export function StoresManagement() {
           >
             <CardHeader className="pb-4">
               <div className="flex justify-between items-start">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-1">
                   <div className="p-3 rounded-lg" style={{ backgroundColor: `${store.theme_color}20` }}>
                     <StoreIcon className="h-6 w-6" style={{ color: store.theme_color }} />
                   </div>
-                  <div>
-                    <CardTitle className="text-lg text-gray-900">{store.name}</CardTitle>
-                    <div className="flex items-center gap-2 mt-2">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg text-gray-900 truncate">{store.name}</CardTitle>
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <Badge variant={store.is_active ? "default" : "secondary"} className="text-xs">
                         {store.is_active ? "نشط" : "غير نشط"}
                       </Badge>
@@ -633,7 +633,7 @@ export function StoresManagement() {
                     </div>
                   </div>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1 flex-shrink-0">
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <Eye className="h-4 w-4" />
                   </Button>
@@ -661,14 +661,14 @@ export function StoresManagement() {
 
                 {store.email && (
                   <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <Mail className="h-4 w-4 text-gray-400" />
+                    <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <span className="truncate">{store.email}</span>
                   </div>
                 )}
 
                 {store.phone && (
                   <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <Phone className="h-4 w-4 text-gray-400" />
+                    <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <span>{store.phone}</span>
                   </div>
                 )}
@@ -680,7 +680,7 @@ export function StoresManagement() {
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center gap-2 text-gray-600">
-                    <Globe className="h-4 w-4 text-gray-400" />
+                    <Globe className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     <span>{store.delivery_range} كم</span>
                   </div>
                   <div className="text-gray-600">
@@ -689,7 +689,7 @@ export function StoresManagement() {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-4 border-t">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t">
                   <span className="text-xs text-gray-500">
                     {new Date(store.created_at).toLocaleDateString("ar-SA")}
                   </span>
